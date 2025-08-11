@@ -40,10 +40,6 @@ int main(int argc, char *argv[]) {
                }
                
                file.seekg(0);
-               while (std::getline(file,line)) {
-                    lines.push_back(line);
-               }
-               
                
                if (header[0] == 0x7F || header[1] == 'E' || header[2] == 'L' || header[3] == 'F') {
                     format = "ELF";
@@ -72,10 +68,10 @@ int main(int argc, char *argv[]) {
      int ch {};
      bool running = true;
      int max_y {}, max_x{};
-     initscr();                  // Вход в curses-режим
-     cbreak();                   // Отключаем буферизацию строк
-     noecho();                   // Не выводить нажатые клавиши
-     keypad(stdscr, TRUE);       // Включаем спец. клавиши (стрелки)
+     initscr();                  // Enter into curses-mode
+     cbreak();                   // No buffer
+     noecho();                   // No echo of pressed buttons
+     keypad(stdscr, TRUE);       // Turn on arrow buttons
      clear();
      while (running) {
           getmaxyx(stdscr, max_y, max_x);

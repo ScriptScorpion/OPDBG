@@ -393,20 +393,21 @@ void Parse(std::vector <std::string> &string, std::string Format, std::ifstream 
      uint64_t entry {};
      uint8_t byte {}; // std::byte
      uint16_t Arch {};
+     std::string builder {};
+     string.clear();
      if (Format == "ELF") {
           File.seekg(0x12); 
           File.read(reinterpret_cast<char*>(&Arch), sizeof(Arch));
-          std::cout << Arch << std::endl;
           if (Arch == 0x3E) {
                string.push_back("x86-64");
           }
           else if (Arch == 0x03) {
                string.push_back("x86");
           }
-          // else {
-          //      std::cerr << "Unknown architecture \n";
-          //      return;
-          // }
+          else {
+               std::cerr << "Unknown Linux architecture \n";
+               return;
+          }
           File.seekg(0x18);
           File.read(reinterpret_cast<char*>(&entry), sizeof(entry));
           File.seekg(entry);
@@ -417,17 +418,16 @@ void Parse(std::vector <std::string> &string, std::string Format, std::ifstream 
      else if (Format == "WIN") {
           File.seekg(0x3C);
           File.read(reinterpret_cast<char*>(&Arch), sizeof(Arch));
-          std::cout << Arch << std::endl;
           if (Arch == 0x8664) {
                string.push_back("x86-64");
           }
           else if (Arch == 0x014C) {
                string.push_back("x86");
           }
-          // else {
-          //      std::cerr << "Unknown architecture \n";
-          //      return;
-          // }
+          else {
+               std::cerr << "Unknown Windows architecture \n";
+               return;
+          }
           File.seekg(0x18);
           File.read(reinterpret_cast<char*>(&entry), sizeof(entry));
           File.seekg(entry);
@@ -440,18 +440,21 @@ void Parse(std::vector <std::string> &string, std::string Format, std::ifstream 
           std::cerr.flush();
           return;
      }
-     std::cout << Format << std::endl;
      
      for (int y = 0; y < opcodes.size() - 1; y++) {
-          for (auto x : commands64bit) {
-               if (x.code == opcodes[y]) {
-                    string.push_back(x.call);
+          for (int x = 0; x < commands64bit.size() - 1; x++) {
+               if (commands64bit[x].code == opcodes[y]) {
+                    builder = (commands64bit[x].call);
+                    builder += " ";
+                    builder += std::to_string(opcodes[y + 1]);
+                    string.push_back(builder);
+                    builder.clear();
                }
                else {
                     continue;
                }
           }
-          // std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(x) << " ";
+          // std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(y) << " ";
      }
      return;
 }
