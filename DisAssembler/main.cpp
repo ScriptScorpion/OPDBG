@@ -28,7 +28,6 @@ int main(int argc, char *argv[]) {
      if (argc > 1) {
           if (CheckIfExe(argv[1]) && std::filesystem::exists(argv[1])) {
                std::ifstream file(argv[1], std::ios::binary);
-               std::string line {};
                std::string format {};
                char header[4];
                file.read(header, sizeof(header));
