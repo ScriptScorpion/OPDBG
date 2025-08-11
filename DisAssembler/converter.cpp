@@ -10,6 +10,20 @@ struct Commands {
      const std::string call;
 };
 
+bool isLittleEndian() {
+    const uint16_t test = 0x0001;
+    return ((const uint8_t)test == 0x01);
+}
+
+uint16_t readLittleEndian(std::istream& file) {
+    uint16_t value;
+    file.read(reinterpret_cast<char*>(&value), sizeof(value));
+    if (!isLittleEndian()) {
+        value = ((value & 0xFF00) >> 8) | ((value & 0x00FF) << 8); // changes byte places, example: 0x1011 will be 0x1110 if this completed
+    }
+    return value;
+}
+
 void Parse(std::vector <std::string> &string, std::string Format, std::ifstream &File) {
      // needs to return changed string
      std::vector <Commands> commands64bit = {
@@ -418,6 +432,8 @@ void Parse(std::vector <std::string> &string, std::string Format, std::ifstream 
      else if (Format == "WIN") {
           File.seekg(0x3C);
           File.read(reinterpret_cast<char*>(&Arch), sizeof(Arch));
+          File.seekg(Arch + 4);
+          Arch = readLittleEndian(File);
           if (Arch == 0x8664) {
                string.push_back("x86-64");
           }
@@ -454,7 +470,7 @@ void Parse(std::vector <std::string> &string, std::string Format, std::ifstream 
                     continue;
                }
           }
-          // std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(y) << " ";
+         // std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(y) << " ";
      }
      return;
 }

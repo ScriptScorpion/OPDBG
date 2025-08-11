@@ -30,6 +30,7 @@ int main(int argc, char *argv[]) {
                std::ifstream file(argv[1], std::ios::binary);
                std::string format {};
                char header[4];
+               file.seekg(0);
                file.read(header, sizeof(header));
 
                if (file.gcount() < 4) {
@@ -38,7 +39,6 @@ int main(int argc, char *argv[]) {
                     return 1;
                }
                
-               file.seekg(0);
                
                if (header[0] == 0x7F || header[1] == 'E' || header[2] == 'L' || header[3] == 'F') {
                     format = "ELF";
