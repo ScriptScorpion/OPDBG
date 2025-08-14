@@ -40,10 +40,10 @@ int main(int argc, char *argv[]) {
                }
                
                
-               if (header[0] == 0x7F || header[1] == 'E' || header[2] == 'L' || header[3] == 'F') {
+               if (header[0] == 0x7F || header[1] == 'E' && header[2] == 'L' && header[3] == 'F') {
                     format = "ELF";
                }
-               else if (header[0] == 'M' || header[1] == 'Z'){
+               else if (header[0] == 'M' && header[1] == 'Z'){
                     format = "WIN";
                }
                else { 
