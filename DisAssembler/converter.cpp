@@ -457,14 +457,16 @@ void Parse(std::vector <std::string> &string, std::string Format, std::ifstream 
           return;
      }
      
-     for (int y = 0; y < opcodes.size() - 1; y++) {
-          for (int x = 0; x < commands64bit.size() - 1; x++) {
+     for (int y = 0; y < opcodes.size() - 1; ++y) {
+          for (int x = 0; x < commands64bit.size() - 1; ++x) {
                if (commands64bit[x].code == opcodes[y]) {
                     builder = (commands64bit[x].call);
                     builder += " ";
                     builder += std::to_string(opcodes[y + 1]);
                     string.push_back(builder);
                     builder.clear();
+                    y++;
+                    break;
                }
                else {
                     continue;
