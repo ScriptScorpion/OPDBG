@@ -1,11 +1,7 @@
-#include <ncurses.h> 
-#include <vector>
-#include <string>
-#include <fstream>
-#include <filesystem>
 #include <iostream>
-
-void Parse(std::vector <std::string> &string, std::string Format, std::ifstream &File); // function in converter.cpp
+#include <ncurses.h> 
+#include <filesystem>
+#include "converter.h"
 
 bool CheckIfExe(std::string file) {
      std::filesystem::path p(file);
@@ -23,7 +19,6 @@ bool CheckIfExe(std::string file) {
 }
 
 int main(int argc, char *argv[]) {
-     
      std::vector<std::string> lines;
      if (argc > 1) {
           if (CheckIfExe(argv[1]) && std::filesystem::exists(argv[1])) {
@@ -34,25 +29,29 @@ int main(int argc, char *argv[]) {
                file.read(header, sizeof(header));
 
                if (file.gcount() < 4) {
-                    std::cerr << "Error: File is too small or read error! " << file.gcount() << " <- Bytes of file. \n";
+                    std::cerr << "Error: File is too small" << std::endl;
                     std::cerr.flush();
                     return 1;
                }
                
                
-               if (header[0] == 0x7F || header[1] == 'E' && header[2] == 'L' && header[3] == 'F') {
+               if (header[0] == 0x7F && header[1] == 'E' && header[2] == 'L' && header[3] == 'F') {
                     format = "ELF";
                }
                else if (header[0] == 'M' && header[1] == 'Z'){
                     format = "WIN";
                }
                else { 
-                    std::cerr << "Unknown file header \n";
+                    std::cerr << "Unknown file header" << std::endl;
                     std::cerr.flush();
                     return 1;
                }
                file.clear();
                Parse(lines, format, file);
+               if (lines.empty()) {
+                    endwin();
+                    return 1;
+               }
           } else {
                endwin();
                std::cerr << "Error: Wrong extension of file or file don't exist: " << argv[1] << std::endl;
@@ -60,13 +59,14 @@ int main(int argc, char *argv[]) {
                return 1;
           }
      } else {
+          std::cerr << "No arguments found" << std::endl;
           endwin();
           return 1;
      }   
      int offset = 0;
      int ch {};
      bool running = true;
-     int max_y {}, max_x{};
+     size_t max_y {}, max_x{};
      initscr();                  // Enter into curses-mode
      cbreak();                   // No buffer
      noecho();                   // No echo of pressed buttons
@@ -75,7 +75,7 @@ int main(int argc, char *argv[]) {
      while (running) {
           getmaxyx(stdscr, max_y, max_x);
           erase();
-          for (int i = 0; i < max_y && (i + offset) < lines.size(); ++i) {
+          for (size_t i = 0; (i < max_y && (i + offset) < lines.size()); ++i) {
                mvprintw(i, 0, "%s", lines[i + offset].c_str());
           }
 

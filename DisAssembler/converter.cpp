@@ -1,478 +1,2009 @@
+#include <iostream>
+#include <iomanip>
 #include <vector>
 #include <string>
-#include <iostream>
+#include <cstring>
+#include <sstream>
+#include <cctype>
 #include <fstream>
-#include <iomanip>
-#include <cstdint>
+#include "hash_function.h"
+
+#define EMPTY ""
+
+// Difference between x32 and x64 assembly
+// In x32 assembly opcodes equals to command it corresponds and next values are just registers to work with
+// In x64 same as with x32 but with 48 at the start
 
 struct Commands {
-     const uint16_t code;
-     const std::string call;
+     const uint16_t opcode;
+     const char *called;
+     uint8_t Size() {
+         switch (opcode) {
+             case 0x0F: return 96;
+             case 0x88: return 8;
+             case 0x89: return 48;
+             case 0x8B: return 48;
+             case 0x8D: return 48;
+             case 0xE8: return 48;
+         }
+     }
 };
 
-bool isLittleEndian() {
-    const uint16_t test = 0x0001;
-    return ((const uint8_t)test == 0x01);
-}
+struct Convert {
+    std::vector <std::string> ChangeRegistersSize(const std::string &registers, const uint8_t &size) {
+        if (size != 8 && size != 16 && size != 32 && size != 64) {
+            return {};
+        }
+        std::string reg1 {};
+        std::string reg2 {};
+        if (registers.find(',') != std::string::npos) {
+            size_t i = 0;
+            for (; registers[i] != ','; ++i) {
+                if (std::isalpha(registers[i])) {
+                    reg1 += registers[i];
+                }
+            }
+            for (; i < registers.length(); ++i) {
+                if (std::isalpha(registers[i])) {
+                    reg2 += registers[i];
+                }
+            }
+            if (size == 8) {
+                switch (HashFunc(reg1.c_str())) {
+                    case HashFunc("rax"): {
+                        reg1 = "al";
+                        break;    
+                    }
+                    case HashFunc("rcx"): {
+                        reg1 = "cl";
+                        break;
+                    }
+                    case HashFunc("rdx"): {
+                        reg1 = "dl";
+                        break;
+                    }
+                    case HashFunc("rbx"): {
+                        reg1 = "bl";
+                        break;
+                    }
 
-uint16_t readLittleEndian(std::istream& file) {
-    uint16_t value;
-    file.read(reinterpret_cast<char*>(&value), sizeof(value));
-    if (!isLittleEndian()) {
-        value = ((value & 0xFF00) >> 8) | ((value & 0x00FF) << 8); // changes byte places, example: 0x1011 will be 0x1110 if this completed
+                    case HashFunc("eax"): {
+                        reg1 = "al";
+                        break;    
+                    }
+                    case HashFunc("ecx"): {
+                        reg1 = "cl";
+                        break;
+                    }
+                    case HashFunc("edx"): {
+                        reg1 = "dl";
+                        break;
+                    }
+                    case HashFunc("ebx"): {
+                        reg1 = "bl";
+                        break;
+                    }
+
+                    case HashFunc("ax"): {
+                        reg1 = "al";
+                        break;    
+                    }
+                    case HashFunc("cx"): {
+                        reg1 = "cl";
+                        break;
+                    }
+                    case HashFunc("dx"): {
+                        reg1 = "dl";
+                        break;
+                    }
+                    case HashFunc("bx"): {
+                        reg1 = "bl";
+                        break;
+                    }
+                    default: {
+                        return {};
+                    }
+                }
+                switch (HashFunc(reg2.c_str())) {
+                    case HashFunc("rax"): {
+                        reg2 = "al";
+                        break;    
+                    }
+                    case HashFunc("rcx"): {
+                        reg2 = "cl";
+                        break;
+                    }
+                    case HashFunc("rdx"): {
+                        reg2 = "dl";
+                        break;
+                    }
+                    case HashFunc("rbx"): {
+                        reg2 = "bl";
+                        break;
+                    }
+
+                    case HashFunc("eax"): {
+                        reg2 = "al";
+                        break;    
+                    }
+                    case HashFunc("ecx"): {
+                        reg2 = "cl";
+                        break;
+                    }
+                    case HashFunc("edx"): {
+                        reg2 = "dl";
+                        break;
+                    }
+                    case HashFunc("ebx"): {
+                        reg2 = "bl";
+                        break;
+                    }
+
+                    case HashFunc("ax"): {
+                        reg2 = "al";
+                        break;    
+                    }
+                    case HashFunc("cx"): {
+                        reg2 = "cl";
+                        break;
+                    }
+                    case HashFunc("dx"): {
+                        reg2 = "dl";
+                        break;
+                    }
+                    case HashFunc("bx"): {
+                        reg2 = "bl";
+                        break;
+                    }
+                    default: {
+                        return {};
+                    }
+                }
+            }
+            else if (size == 16) {
+                switch (HashFunc(reg1.c_str())) {
+                    case HashFunc("rax"): {
+                        reg1 = "ax";
+                        break;    
+                    }
+                    case HashFunc("rcx"): {
+                        reg1 = "cx";
+                        break;
+                    }
+                    case HashFunc("rdx"): {
+                        reg1 = "dx";
+                        break;
+                    }
+                    case HashFunc("rbx"): {
+                        reg1 = "bx";
+                        break;
+                    }
+                    case HashFunc("rsp"): {
+                        reg1 = "sp";
+                        break;
+                    }
+                    case HashFunc("rbp"): {
+                        reg1 = "bp";
+                        break;
+                    }
+                    case HashFunc("rsi"): {
+                        reg1 = "si";
+                        break;
+                    }
+                    case HashFunc("rdi"): {
+                        reg1 = "di";
+                        break;
+                    }
+
+                    case HashFunc("eax"): {
+                        reg1 = "ax";
+                        break;    
+                    }
+                    case HashFunc("ecx"): {
+                        reg1 = "cx";
+                        break;
+                    }
+                    case HashFunc("edx"): {
+                        reg1 = "dx";
+                        break;
+                    }
+                    case HashFunc("ebx"): {
+                        reg1 = "bx";
+                        break;
+                    }
+                    case HashFunc("esp"): {
+                        reg1 = "sp";
+                        break;
+                    }
+                    case HashFunc("ebp"): {
+                        reg1 = "bp";
+                        break;
+                    }
+                    case HashFunc("esi"): {
+                        reg1 = "si";
+                        break;
+                    }
+                    case HashFunc("edi"): {
+                        reg1 = "di";
+                        break;
+                    }
+
+                    case HashFunc("al"): {
+                        reg1 = "ax";
+                        break;    
+                    }
+                    case HashFunc("cl"): {
+                        reg1 = "cx";
+                        break;
+                    }
+                    case HashFunc("dl"): {
+                        reg1 = "dx";
+                        break;
+                    }
+                    case HashFunc("bl"): {
+                        reg1 = "bx";
+                        break;
+                    }
+                    default: {
+                        return {};
+                    }
+                }
+                switch (HashFunc(reg2.c_str())) {
+                    case HashFunc("rax"): {
+                        reg2 = "ax";
+                        break;    
+                    }
+                    case HashFunc("rcx"): {
+                        reg2 = "cx";
+                        break;
+                    }
+                    case HashFunc("rdx"): {
+                        reg2 = "dx";
+                        break;
+                    }
+                    case HashFunc("rbx"): {
+                        reg2 = "bx";
+                        break;
+                    }
+                    case HashFunc("rsp"): {
+                        reg2 = "sp";
+                        break;
+                    }
+                    case HashFunc("rbp"): {
+                        reg2 = "bp";
+                        break;
+                    }
+                    case HashFunc("rsi"): {
+                        reg2 = "si";
+                        break;
+                    }
+                    case HashFunc("rdi"): {
+                        reg2 = "di";
+                        break;
+                    }
+
+                    case HashFunc("eax"): {
+                        reg2 = "ax";
+                        break;    
+                    }
+                    case HashFunc("ecx"): {
+                        reg2 = "cx";
+                        break;
+                    }
+                    case HashFunc("edx"): {
+                        reg2 = "dx";
+                        break;
+                    }
+                    case HashFunc("ebx"): {
+                        reg2 = "bx";
+                        break;
+                    }
+                    case HashFunc("esp"): {
+                        reg2 = "sp";
+                        break;
+                    }
+                    case HashFunc("ebp"): {
+                        reg2 = "bp";
+                        break;
+                    }
+                    case HashFunc("esi"): {
+                        reg2 = "si";
+                        break;
+                    }
+                    case HashFunc("edi"): {
+                        reg2 = "di";
+                        break;
+                    }
+
+                    case HashFunc("al"): {
+                        reg2 = "ax";
+                        break;    
+                    }
+                    case HashFunc("cl"): {
+                        reg2 = "cx";
+                        break;
+                    }
+                    case HashFunc("dl"): {
+                        reg2 = "dx";
+                        break;
+                    }
+                    case HashFunc("bl"): {
+                        reg2 = "bx";
+                        break;
+                    }
+                    default: {
+                        return {};
+                    }
+                }
+            }
+            else if (size == 32) {
+                switch (HashFunc(reg1.c_str())) {
+                    case HashFunc("rax"): {
+                        reg1 = "eax";
+                        break;    
+                    }
+                    case HashFunc("rcx"): {
+                        reg1 = "ecx";
+                        break;
+                    }
+                    case HashFunc("rdx"): {
+                        reg1 = "edx";
+                        break;
+                    }
+                    case HashFunc("rbx"): {
+                        reg1 = "ebx";
+                        break;
+                    }
+                    case HashFunc("rsp"): {
+                        reg1 = "esp";
+                        break;
+                    }
+                    case HashFunc("rbp"): {
+                        reg1 = "ebp";
+                        break;
+                    }
+                    case HashFunc("rsi"): {
+                        reg1 = "esi";
+                        break;
+                    }
+                    case HashFunc("rdi"): {
+                        reg1 = "edi";
+                        break;
+                    }
+
+                    case HashFunc("ax"): {
+                        reg1 = "eax";
+                        break;    
+                    }
+                    case HashFunc("cx"): {
+                        reg1 = "ecx";
+                        break;
+                    }
+                    case HashFunc("dx"): {
+                        reg1 = "edx";
+                        break;
+                    }
+                    case HashFunc("bx"): {
+                        reg1 = "ebx";
+                        break;
+                    }
+                    case HashFunc("sp"): {
+                        reg1 = "esp";
+                        break;
+                    }
+                    case HashFunc("bp"): {
+                        reg1 = "ebp";
+                        break;
+                    }
+                    case HashFunc("si"): {
+                        reg1 = "esi";
+                        break;
+                    }
+                    case HashFunc("di"): {
+                        reg1 = "edi";
+                        break;
+                    }
+
+                    case HashFunc("al"): {
+                        reg1 = "eax";
+                        break;    
+                    }
+                    case HashFunc("cl"): {
+                        reg1 = "ecx";
+                        break;
+                    }
+                    case HashFunc("dl"): {
+                        reg1 = "edx";
+                        break;
+                    }
+                    case HashFunc("bl"): {
+                        reg1 = "ebx";
+                        break;
+                    }
+                    default: {
+                        return {};
+                    }
+                }
+                switch (HashFunc(reg2.c_str())) {
+                    case HashFunc("rax"): {
+                        reg2 = "eax";
+                        break;    
+                    }
+                    case HashFunc("rcx"): {
+                        reg2 = "ecx";
+                        break;
+                    }
+                    case HashFunc("rdx"): {
+                        reg2 = "edx";
+                        break;
+                    }
+                    case HashFunc("rbx"): {
+                        reg2 = "ebx";
+                        break;
+                    }
+                    case HashFunc("rsp"): {
+                        reg2 = "esp";
+                        break;
+                    }
+                    case HashFunc("rbp"): {
+                        reg2 = "ebp";
+                        break;
+                    }
+                    case HashFunc("rsi"): {
+                        reg2 = "esi";
+                        break;
+                    }
+                    case HashFunc("rdi"): {
+                        reg2 = "edi";
+                        break;
+                    }
+
+                    case HashFunc("ax"): {
+                        reg2 = "eax";
+                        break;    
+                    }
+                    case HashFunc("cx"): {
+                        reg2 = "ecx";
+                        break;
+                    }
+                    case HashFunc("dx"): {
+                        reg2 = "edx";
+                        break;
+                    }
+                    case HashFunc("bx"): {
+                        reg2 = "ebx";
+                        break;
+                    }
+                    case HashFunc("sp"): {
+                        reg2 = "esp";
+                        break;
+                    }
+                    case HashFunc("bp"): {
+                        reg2 = "ebp";
+                        break;
+                    }
+                    case HashFunc("si"): {
+                        reg2 = "esi";
+                        break;
+                    }
+                    case HashFunc("di"): {
+                        reg2 = "edi";
+                        break;
+                    }
+
+                    case HashFunc("al"): {
+                        reg2 = "eax";
+                        break;    
+                    }
+                    case HashFunc("cl"): {
+                        reg2 = "ecx";
+                        break;
+                    }
+                    case HashFunc("dl"): {
+                        reg2 = "edx";
+                        break;
+                    }
+                    case HashFunc("bl"): {
+                        reg2 = "ebx";
+                        break;
+                    }
+                    default: {
+                        return {};
+                    }
+                }
+            }
+            else { // 64
+                switch (HashFunc(reg1.c_str())) {
+                    case HashFunc("eax"): {
+                        reg1 = "rax";
+                        break;    
+                    }
+                    case HashFunc("ecx"): {
+                        reg1 = "rcx";
+                        break;
+                    }
+                    case HashFunc("edx"): {
+                        reg1 = "rdx";
+                        break;
+                    }
+                    case HashFunc("ebx"): {
+                        reg1 = "rbx";
+                        break;
+                    }
+                    case HashFunc("esp"): {
+                        reg1 = "rsp";
+                        break;
+                    }
+                    case HashFunc("ebp"): {
+                        reg1 = "rbp";
+                        break;
+                    }
+                    case HashFunc("esi"): {
+                        reg1 = "rsi";
+                        break;
+                    }
+                    case HashFunc("edi"): {
+                        reg1 = "rdi";
+                        break;
+                    }
+                    
+                    case HashFunc("ax"): {
+                        reg1 = "rax";
+                        break;    
+                    }
+                    case HashFunc("cx"): {
+                        reg1 = "rcx";
+                        break;
+                    }
+                    case HashFunc("dx"): {
+                        reg1 = "rdx";
+                        break;
+                    }
+                    case HashFunc("bx"): {
+                        reg1 = "rbx";
+                        break;
+                    }
+                    case HashFunc("sp"): {
+                        reg1 = "rsp";
+                        break;
+                    }
+                    case HashFunc("bp"): {
+                        reg1 = "rbp";
+                        break;
+                    }
+                    case HashFunc("si"): {
+                        reg1 = "rsi";
+                        break;
+                    }
+                    case HashFunc("di"): {
+                        reg1 = "rdi";
+                        break;
+                    }
+
+                    case HashFunc("al"): {
+                        reg1 = "rax";
+                        break;    
+                    }
+                    case HashFunc("cl"): {
+                        reg1 = "rcx";
+                        break;
+                    }
+                    case HashFunc("dl"): {
+                        reg1 = "rdx";
+                        break;
+                    }
+                    case HashFunc("bl"): {
+                        reg1 = "rbx";
+                        break;
+                    }
+                    default: {
+                        return {};
+                    }
+                }
+                switch (HashFunc(reg2.c_str())) {
+                    case HashFunc("eax"): {
+                        reg2 = "rax";
+                        break;    
+                    }
+                    case HashFunc("ecx"): {
+                        reg2 = "rcx";
+                        break;
+                    }
+                    case HashFunc("edx"): {
+                        reg2 = "rdx";
+                        break;
+                    }
+                    case HashFunc("ebx"): {
+                        reg2 = "rbx";
+                        break;
+                    }
+                    case HashFunc("esp"): {
+                        reg2 = "rsp";
+                        break;
+                    }
+                    case HashFunc("ebp"): {
+                        reg2 = "rbp";
+                        break;
+                    }
+                    case HashFunc("esi"): {
+                        reg2 = "rsi";
+                        break;
+                    }
+                    case HashFunc("edi"): {
+                        reg2 = "rdi";
+                        break;
+                    }
+
+                    case HashFunc("ax"): {
+                        reg2 = "rax";
+                        break;    
+                    }
+                    case HashFunc("cx"): {
+                        reg2 = "rcx";
+                        break;
+                    }
+                    case HashFunc("dx"): {
+                        reg2 = "rdx";
+                        break;
+                    }
+                    case HashFunc("bx"): {
+                        reg2 = "rbx";
+                        break;
+                    }
+                    case HashFunc("sp"): {
+                        reg2 = "rsp";
+                        break;
+                    }
+                    case HashFunc("bp"): {
+                        reg2 = "rbp";
+                        break;
+                    }
+                    case HashFunc("si"): {
+                        reg2 = "rsi";
+                        break;
+                    }
+                    case HashFunc("di"): {
+                        reg2 = "rdi";
+                        break;
+                    }
+
+                    case HashFunc("al"): {
+                        reg2 = "rax";
+                        break;    
+                    }
+                    case HashFunc("cl"): {
+                        reg2 = "rcx";
+                        break;
+                    }
+                    case HashFunc("dl"): {
+                        reg2 = "rdx";
+                        break;
+                    }
+                    case HashFunc("bl"): {
+                        reg2 = "rbx";
+                        break;
+                    }
+                    default: {
+                        return {};
+                    }
+                }
+            }
+            return {reg1, reg2};
+        }
+        else {
+            std::string reg1 {};
+            for (const char &c : registers) {
+                if (std::isalpha(c)) {
+                    reg1 += c;
+                }
+            }
+            if (size == 8) {
+                switch (HashFunc(reg1.c_str())) {
+                    case HashFunc("rax"): {
+                        reg1 = "al";
+                        break;    
+                    }
+                    case HashFunc("rcx"): {
+                        reg1 = "cl";
+                        break;
+                    }
+                    case HashFunc("rdx"): {
+                        reg1 = "dl";
+                        break;
+                    }
+                    case HashFunc("rbx"): {
+                        reg1 = "bl";
+                        break;
+                    }
+
+                    case HashFunc("eax"): {
+                        reg1 = "al";
+                        break;    
+                    }
+                    case HashFunc("ecx"): {
+                        reg1 = "cl";
+                        break;
+                    }
+                    case HashFunc("edx"): {
+                        reg1 = "dl";
+                        break;
+                    }
+                    case HashFunc("ebx"): {
+                        reg1 = "bl";
+                        break;
+                    }
+                    default: {
+                        return {};
+                    }
+                }
+            }
+            else if (size == 16) {
+                switch (HashFunc(reg1.c_str())) {
+                    case HashFunc("rax"): {
+                        reg1 = "ax";
+                        break;    
+                    }
+                    case HashFunc("rcx"): {
+                        reg1 = "cx";
+                        break;
+                    }
+                    case HashFunc("rdx"): {
+                        reg1 = "dx";
+                        break;
+                    }
+                    case HashFunc("rbx"): {
+                        reg1 = "bx";
+                        break;
+                    }
+                    case HashFunc("rsp"): {
+                        reg1 = "sp";
+                        break;
+                    }
+                    case HashFunc("rbp"): {
+                        reg1 = "bp";
+                        break;
+                    }
+                    case HashFunc("rsi"): {
+                        reg1 = "si";
+                        break;
+                    }
+                    case HashFunc("rdi"): {
+                        reg1 = "di";
+                        break;
+                    }
+
+                    case HashFunc("eax"): {
+                        reg1 = "ax";
+                        break;    
+                    }
+                    case HashFunc("ecx"): {
+                        reg1 = "cx";
+                        break;
+                    }
+                    case HashFunc("edx"): {
+                        reg1 = "dx";
+                        break;
+                    }
+                    case HashFunc("ebx"): {
+                        reg1 = "bx";
+                        break;
+                    }
+                    case HashFunc("esp"): {
+                        reg1 = "sp";
+                        break;
+                    }
+                    case HashFunc("ebp"): {
+                        reg1 = "bp";
+                        break;
+                    }
+                    case HashFunc("esi"): {
+                        reg1 = "si";
+                        break;
+                    }
+                    case HashFunc("edi"): {
+                        reg1 = "di";
+                        break;
+                    }
+                    default: {
+                        return {};
+                    }
+                }
+            }
+            else if (size == 32) {
+                switch (HashFunc(reg1.c_str())) {
+                    case HashFunc("rax"): {
+                        reg1 = "eax";
+                        break;    
+                    }
+                    case HashFunc("rcx"): {
+                        reg1 = "ecx";
+                        break;
+                    }
+                    case HashFunc("rdx"): {
+                        reg1 = "edx";
+                        break;
+                    }
+                    case HashFunc("rbx"): {
+                        reg1 = "ebx";
+                        break;
+                    }
+                    case HashFunc("rsp"): {
+                        reg1 = "esp";
+                        break;
+                    }
+                    case HashFunc("rbp"): {
+                        reg1 = "ebp";
+                        break;
+                    }
+                    case HashFunc("rsi"): {
+                        reg1 = "esi";
+                        break;
+                    }
+                    case HashFunc("rdi"): {
+                        reg1 = "edi";
+                        break;
+                    }
+                    default: {
+                        return {};
+                    }
+                }
+            }
+            else { // 64
+                switch (HashFunc(reg1.c_str())) {
+                    case HashFunc("eax"): {
+                        reg1 = "rax";
+                        break;    
+                    }
+                    case HashFunc("ecx"): {
+                        reg1 = "rcx";
+                        break;
+                    }
+                    case HashFunc("edx"): {
+                        reg1 = "rdx";
+                        break;
+                    }
+                    case HashFunc("ebx"): {
+                        reg1 = "rbx";
+                        break;
+                    }
+                    case HashFunc("esp"): {
+                        reg1 = "rsp";
+                        break;
+                    }
+                    case HashFunc("ebp"): {
+                        reg1 = "rbp";
+                        break;
+                    }
+                    case HashFunc("esi"): {
+                        reg1 = "rsi";
+                        break;
+                    }
+                    case HashFunc("edi"): {
+                        reg1 = "rdi";
+                        break;
+                    }
+                    default: {
+                        return {};
+                    }
+                }
+            }
+            return {reg1}; 
+        }
     }
-    return value;
-}
+}Converter;
 
-void Parse(std::vector <std::string> &string, std::string Format, std::ifstream &File) {
-     // needs to return changed string
-     std::vector <Commands> commands64bit = {
-          {0x00, "read"},
-          {0x01, "write"},
-          {0x02, "open"},
-          {0x03, "close"},
-          {0x04, "stat"},
-          {0x05, "fstat"},
-          {0x06, "lstat"},
-          {0x07, "poll"},
-          {0x08, "lseek"},
-          {0x09, "mmap"},
-          {0x0a, "mprotect"},
-          {0x0b, "munmap"},
-          {0x0c, "brk"},
-          {0x0d, "rt_sigaction"},
-          {0x0e, "rt_sigprocmask"},
-          {0x0f, "rt_sigreturn"},
-          {0x10, "ioctl"},
-          {0x11, "pread64"},
-          {0x12, "pwrite64"},
-          {0x13, "readv"},
-          {0x14, "writev"},
-          {0x15, "access"},
-          {0x16, "pipe"},
-          {0x17, "select"},
-          {0x18, "sched_yield"},
-          {0x19, "mremap"},
-          {0x1a, "msync"},
-          {0x1b, "mincore"},
-          {0x1c, "madvise"},
-          {0x1d, "shmget"},
-          {0x1e, "shmat"},
-          {0x1f, "shmctl"},
-          {0x20, "dup"},
-          {0x21, "dup2"},
-          {0x22, "pause"},
-          {0x23, "nanosleep"},
-          {0x24, "getitimer"},
-          {0x25, "alarm"},
-          {0x26, "setitimer"},
-          {0x27, "getpid"},
-          {0x28, "sendfile"},
-          {0x29, "socket"},
-          {0x2a, "connect"},
-          {0x2b, "accept"},
-          {0x2c, "sendto"},
-          {0x2d, "recvfrom"},
-          {0x2e, "sendmsg"},
-          {0x2f, "recvmsg"},
-          {0x30, "shutdown"},
-          {0x31, "bind"},
-          {0x32, "listen"},
-          {0x33, "getsockname"},
-          {0x34, "getpeername"},
-          {0x35, "socketpair"},
-          {0x36, "setsockopt"},
-          {0x37, "getsockopt"},
-          {0x38, "clone"},
-          {0x39, "fork"},
-          {0x3a, "vfork"},
-          {0x3b, "execve"},
-          {0x3c, "exit"},
-          {0x3d, "wait4"},
-          {0x3e, "kill"},
-          {0x3f, "uname"},
-          {0x40, "semget"},
-          {0x41, "semop"},
-          {0x42, "semctl"},
-          {0x43, "shmdt"},
-          {0x44, "msgget"},
-          {0x45, "msgsnd"},
-          {0x46, "msgrcv"},
-          {0x47, "msgctl"},
-          {0x48, "fcntl"},
-          {0x49, "flock"},
-          {0x4a, "fsync"},
-          {0x4b, "fdatasync"},
-          {0x4c, "truncate"},
-          {0x4d, "ftruncate"},
-          {0x4e, "getdents"},
-          {0x4f, "getcwd"},
-          {0x50, "chdir"},
-          {0x51, "fchdir"},
-          {0x52, "rename"},
-          {0x53, "mkdir"},
-          {0x54, "rmdir"},
-          {0x55, "creat"},
-          {0x56, "link"},
-          {0x57, "unlink"},
-          {0x58, "symlink"},
-          {0x59, "readlink"},
-          {0x5a, "chmod"},
-          {0x5b, "fchmod"},
-          {0x5c, "chown"},
-          {0x5d, "fchown"},
-          {0x5e, "lchown"},
-          {0x5f, "umask"},
-          {0x60, "gettimeofday"},
-          {0x61, "getrlimit"},
-          {0x62, "getrusage"},
-          {0x63, "sysinfo"},
-          {0x64, "times"},
-          {0x65, "ptrace"},
-          {0x66, "getuid"},
-          {0x67, "syslog"},
-          {0x68, "getgid"},
-          {0x69, "setuid"},
-          {0x6a, "setgid"},
-          {0x6b, "geteuid"},
-          {0x6c, "getegid"},
-          {0x6d, "setpgid"},
-          {0x6e, "getppid"},
-          {0x6f, "getpgrp"},
-          {0x70, "setsid"},
-          {0x71, "setreuid"},
-          {0x72, "setregid"},
-          {0x73, "getgroups"},
-          {0x74, "setgroups"},
-          {0x75, "setresuid"},
-          {0x76, "getresuid"},
-          {0x77, "setresgid"},
-          {0x78, "getresgid"},
-          {0x79, "getpgid"},
-          {0x7a, "setfsuid"},
-          {0x7b, "setfsgid"},
-          {0x7c, "getsid"},
-          {0x7d, "capget"},
-          {0x7e, "capset"},
-          {0x7f, "rt_sigpending"},
-          {0x80, "rt_sigtimedwait"},
-          {0x81, "rt_sigqueueinfo"},
-          {0x82, "rt_sigsuspend"},
-          {0x83, "sigaltstack"},
-          {0x84, "utime"},
-          {0x85, "mknod"},
-          {0x86, "uselib"},
-          {0x87, "personality"},
-          {0x88, "ustat"},
-          {0x89, "statfs"},
-          {0x8a, "fstatfs"},
-          {0x8b, "sysfs"},
-          {0x8c, "getpriority"},
-          {0x8d, "setpriority"},
-          {0x8e, "sched_setparam"},
-          {0x8f, "sched_getparam"},
-          {0x90, "sched_setscheduler"},
-          {0x91, "sched_getscheduler"},
-          {0x92, "sched_get_priority_max"},
-          {0x93, "sched_get_priority_min"},
-          {0x94, "sched_rr_get_interval"},
-          {0x95, "mlock"},
-          {0x96, "munlock"},
-          {0x97, "mlockall"},
-          {0x98, "munlockall"},
-          {0x99, "vhangup"},
-          {0x9a, "modify_ldt"},
-          {0x9b, "pivot_root"},
-          {0x9c, "_sysctl"},
-          {0x9d, "prctl"},
-          {0x9e, "arch_prctl"},
-          {0x9f, "adjtimex"},
-          {0xa0, "setrlimit"},
-          {0xa1, "chroot"},
-          {0xa2, "sync"},
-          {0xa3, "acct"},
-          {0xa4, "settimeofday"},
-          {0xa5, "mount"},
-          {0xa6, "umount2"},
-          {0xa7, "swapon"},
-          {0xa8, "swapoff"},
-          {0xa9, "reboot"},
-          {0xaa, "sethostname"},
-          {0xab, "setdomainname"},
-          {0xac, "iopl"},
-          {0xad, "ioperm"},
-          {0xae, "create_module"},
-          {0xaf, "init_module"},
-          {0xb0, "delete_module"},
-          {0xb1, "get_kernel_syms"},
-          {0xb2, "query_module"},
-          {0xb3, "quotactl"},
-          {0xb4, "nfsservctl"},
-          {0xb5, "getpmsg"},
-          {0xb6, "putpmsg"},
-          {0xb7, "afs_syscall"},
-          {0xb8, "tuxcall"},
-          {0xb9, "security"},
-          {0xba, "gettid"},
-          {0xbb, "readahead"},
-          {0xbc, "setxattr"},
-          {0xbd, "lsetxattr"},
-          {0xbe, "fsetxattr"},
-          {0xbf, "getxattr"},
-          {0xc0, "lgetxattr"},
-          {0xc1, "fgetxattr"},
-          {0xc2, "listxattr"},
-          {0xc3, "llistxattr"},
-          {0xc4, "flistxattr"},
-          {0xc5, "removexattr"},
-          {0xc6, "lremovexattr"},
-          {0xc7, "fremovexattr"},
-          {0xc8, "tkill"},
-          {0xc9, "time"},
-          {0xca, "futex"},
-          {0xcb, "sched_setaffinity"},
-          {0xcc, "sched_getaffinity"},
-          {0xcd, "set_thread_area"},
-          {0xce, "io_setup"},
-          {0xcf, "io_destroy"},
-          {0xd0, "io_getevents"},
-          {0xd1, "io_submit"},
-          {0xd2, "io_cancel"},
-          {0xd3, "get_thread_area"},
-          {0xd4, "lookup_dcookie"},
-          {0xd5, "epoll_create"},
-          {0xd6, "epoll_ctl_old"},
-          {0xd7, "epoll_wait_old"},
-          {0xd8, "remap_file_pages"},
-          {0xd9, "getdents64"},
-          {0xda, "set_tid_address"},
-          {0xdb, "restart_syscall"},
-          {0xdc, "semtimedop"},
-          {0xdd, "fadvise64"},
-          {0xde, "timer_create"},
-          {0xdf, "timer_settime"},
-          {0xe0, "timer_gettime"},
-          {0xe1, "timer_getoverrun"},
-          {0xe2, "timer_delete"},
-          {0xe3, "clock_settime"},
-          {0xe4, "clock_gettime"},
-          {0xe5, "clock_getres"},
-          {0xe6, "clock_nanosleep"},
-          {0xe7, "exit_group"},
-          {0xe8, "epoll_wait"},
-          {0xe9, "epoll_ctl"},
-          {0xea, "tgkill"},
-          {0xeb, "utimes"},
-          {0xec, "vserver"},
-          {0xed, "mbind"},
-          {0xee, "set_mempolicy"},
-          {0xef, "get_mempolicy"},
-          {0xf0, "mq_open"},
-          {0xf1, "mq_unlink"},
-          {0xf2, "mq_timedsend"},
-          {0xf3, "mq_timedreceive"},
-          {0xf4, "mq_notify"},
-          {0xf5, "mq_getsetattr"},
-          {0xf6, "kexec_load"},
-          {0xf7, "waitid"},
-          {0xf8, "add_key"},
-          {0xf9, "request_key"},
-          {0xfa, "keyctl"},
-          {0xfb, "ioprio_set"},
-          {0xfc, "ioprio_get"},
-          {0xfd, "inotify_init"},
-          {0xfe, "inotify_add_watch"},
-          {0xff, "inotify_rm_watch"},
-          {0x100, "migrate_pages"},
-          {0x101, "openat"},
-          {0x102, "mkdirat"},
-          {0x103, "mknodat"},
-          {0x104, "fchownat"},
-          {0x105, "futimesat"},
-          {0x106, "newfstatat"},
-          {0x107, "unlinkat"},
-          {0x108, "renameat"},
-          {0x109, "linkat"},
-          {0x10a, "symlinkat"},
-          {0x10b, "readlinkat"},
-          {0x10c, "fchmodat"},
-          {0x10d, "faccessat"},
-          {0x10e, "pselect6"},
-          {0x10f, "ppoll"},
-          {0x110, "unshare"},
-          {0x111, "set_robust_list"},
-          {0x112, "get_robust_list"},
-          {0x113, "splice"},
-          {0x114, "tee"},
-          {0x115, "sync_file_range"},
-          {0x116, "vmsplice"},
-          {0x117, "move_pages"},
-          {0x118, "utimensat"},
-          {0x119, "epoll_pwait"},
-          {0x11a, "signalfd"},
-          {0x11b, "timerfd_create"},
-          {0x11c, "eventfd"},
-          {0x11d, "fallocate"},
-          {0x11e, "timerfd_settime"},
-          {0x11f, "timerfd_gettime"},
-          {0x120, "accept4"},
-          {0x121, "signalfd4"},
-          {0x122, "eventfd2"},
-          {0x123, "epoll_create1"},
-          {0x124, "dup3"},
-          {0x125, "pipe2"},
-          {0x126, "inotify_init1"},
-          {0x127, "preadv"},
-          {0x128, "pwritev"},
-          {0x129, "rt_tgsigqueueinfo"},
-          {0x12a, "perf_event_open"},
-          {0x12b, "recvmmsg"},
-          {0x12c, "fanotify_init"},
-          {0x12d, "fanotify_mark"},
-          {0x12e, "prlimit64"},
-          {0x12f, "name_to_handle_at"},
-          {0x130, "open_by_handle_at"},
-          {0x131, "clock_adjtime"},
-          {0x132, "syncfs"},
-          {0x133, "sendmmsg"},
-          {0x134, "setns"},
-          {0x135, "getcpu"},
-          {0x136, "process_vm_readv"},
-          {0x137, "process_vm_writev"},
-          {0x138, "kcmp"},
-          {0x139, "finit_module"},
-          {0x13a, "sched_setattr"},
-          {0x13b, "sched_getattr"},
-          {0x13c, "renameat2"},
-          {0x13d, "seccomp"},
-          {0x13e, "getrandom"},
-          {0x13f, "memfd_create"},
-          {0x140, "kexec_file_load"},
-          {0x141, "bpf"},
-          {0x142, "execveat"},
-          {0x143, "userfaultfd"},
-          {0x144, "membarrier"},
-          {0x145, "mlock2"},
-          {0x146, "copy_file_range"},
-          {0x147, "preadv2"},
-          {0x148, "pwritev2"},
-          {0x149, "pkey_mprotect"},
-          {0x14a, "pkey_alloc"},
-          {0x14b, "pkey_free"},
-          {0x14c, "statx"},
-          {0x14d, "io_pgetevents"},
-          {0x14e, "rseq"},
-          {0x14f, "uretprobe"},
-          {0x1a8, "pidfd_send_signal"},
-          {0x1a9, "io_uring_setup"},
-          {0x1aa, "io_uring_enter"},
-          {0x1ab, "io_uring_register"},
-          {0x1ac, "open_tree"},
-          {0x1ad, "move_mount"},
-          {0x1ae, "fsopen"},
-          {0x1af, "fsconfig"},
-          {0x1b0, "fsmount"},
-          {0x1b1, "fspick"},
-          {0x1b2, "pidfd_open"},
-          {0x1b3, "clone3"},
-          {0x1b4, "close_range"},
-          {0x1b5, "openat2"},
-          {0x1b6, "pidfd_getfd"},
-          {0x1b7, "faccessat2"},
-          {0x1b8, "process_madvise"},
-          {0x1b9, "epoll_pwait2"},
-          {0x1ba, "mount_setattr"},
-          {0x1bb, "quotactl_fd"},
-          {0x1bc, "landlock_create_ruleset"},
-          {0x1bd, "landlock_add_rule"},
-          {0x1be, "landlock_restrict_self"},
-          {0x1bf, "memfd_secret"},
-          {0x1c0, "process_mrelease"},
-          {0x1c1, "futex_waitv"},
-          {0x1c2, "set_mempolicy_home_node"},
-          {0x1c3, "cachestat"},
-          {0x1c4, "fchmodat2"},
-          {0x1c5, "map_shadow_stack"},
-          {0x1c6, "futex_wake"},
-          {0x1c7, "futex_wait"},
-          {0x1c8, "futex_requeue"},
-          {0x1c9, "statmount"},
-          {0x1ca, "listmount"},
-          {0x1cb, "lsm_get_self_attr"},
-          {0x1cc, "lsm_set_self_attr"},
-          {0x1cd, "lsm_list_modules"},
-          {0x1ce, "mseal"}
+
+void Parse(std::vector <std::string> &output, const std::string &Format, std::ifstream &File) {
+     // all lines that commented with predifined, and other opcodes that have in docs `+rb` or `+rw` or `+rd` needs to redone because it is means that:
+     // '+' 'rb' or 'rw' or 'rd' - means '+8' in 99% cases, and that value corresponds to what register operation will affect
+     // example: 0x56 - `push esi`; 0x5e - `pop esi`. (0x56 + 0x8 = 0x5e)
+     const std::vector <Commands> commands = {
+          {0x50, "push rax"},
+          {0x51, "push rcx"},
+          {0x52, "push rdx"},
+          {0x53, "push rbx"},
+          {0x54, "push rsp"},
+          {0x55, "push rbp"},
+          {0x58, "pop rax"},
+          {0x59, "pop rcx"},
+          {0x5A, "pop rdx"},
+          {0x5B, "pop rbx"},
+          {0x5C, "pop rsp"},
+          {0x5D, "pop rbp"},
+          
+          {0x0F, EMPTY}, // mov
+          {0x88, EMPTY}, // mov 
+          {0x89, EMPTY}, // mov
+          {0x8B, EMPTY}, // mov 
+          {0x8D, EMPTY}, // lea
+          {0xE8, EMPTY}, // call
+
+          {0x90, "nop"},
+          {0xC3, "ret"}, // no input
+          {0xCB, "ret"}, // no input
+          {0xC9, "leave"}, // no input
+          {0xF4, "hlt"}, // no input
      };
-     std::vector <uint8_t> opcodes;
-     uint64_t entry {};
-     uint8_t byte {}; // std::byte
-     uint16_t Arch {};
+     bool ARCH_X64 {};
+     std::vector <uint8_t> insiders;
      std::string builder {};
-     string.clear();
+     std::stringstream hexer {};
+     uint64_t entry {};
+     uint8_t byte {}; 
+     uint16_t Arch {};
+     uint32_t text_size {};
+     
+     // NOTES:
+     // .read reads each character
+     // hex values are readed backwars, like 0x4550 will be: 50 -> P, 45 -> E, output is PE
+     // to find info about sections goto 'shoff' address and skip 40 bytes of zeros and then you find 1 section, next section is located in adress: `current section start position + shent_size` 
+     
      if (Format == "ELF") {
-          File.seekg(0x12); 
+          uint32_t phoff {};
+          uint32_t shoff {};
+          uint16_t phnum {};
+          uint16_t shnum {};
+          uint16_t phent_size {};
+          uint16_t shent_size {};
+          uint8_t numbers_size {};
+
+          File.seekg(0x12);
           File.read(reinterpret_cast<char*>(&Arch), sizeof(Arch));
           if (Arch == 0x3E) {
-               string.push_back("x86-64");
+               ARCH_X64 = true;
+               output.push_back("x86-64");
+               output.push_back("");
+               numbers_size = 8;
           }
-          else if (Arch == 0x03) {
-               string.push_back("x86");
+          else if (Arch == 0x03 || Arch == 0x13) {
+               ARCH_X64 = false;
+               output.push_back("x86");
+               output.push_back("");
+               numbers_size = 4;
           }
           else {
-               std::cerr << "Unknown Linux architecture \n";
+               output.clear();
+               std::cerr << "Unknown Linux architecture: " + std::to_string(Arch) << std::endl;
                return;
           }
           File.seekg(0x18);
-          File.read(reinterpret_cast<char*>(&entry), sizeof(entry));
-          File.seekg(entry);
-          for (int i = 0; File.read(reinterpret_cast<char*>(&byte), 1); ++i) {
-               opcodes.push_back(byte);
+          File.read(reinterpret_cast<char*>(&entry), numbers_size); 
+          
+          File.seekg(0x18 + numbers_size); 
+          File.read(reinterpret_cast<char*>(&phoff), numbers_size);
+        
+          File.seekg(0x18 + numbers_size + numbers_size);
+          File.read(reinterpret_cast<char*>(&shoff), numbers_size);
+          
+          File.seekg(0x18 + numbers_size + numbers_size + numbers_size + 6);
+          File.read(reinterpret_cast<char*>(&phent_size), 2);
+
+          File.seekg(0x18 + numbers_size + numbers_size + numbers_size + 8);
+          File.read(reinterpret_cast<char*>(&phnum), 2);
+
+          File.seekg(0x18 + numbers_size + numbers_size + numbers_size + 10);
+          File.read(reinterpret_cast<char*>(&shent_size), 2);
+
+          File.seekg(0x18 + numbers_size + numbers_size + numbers_size + 12); 
+          File.read(reinterpret_cast<char*>(&shnum), 2);
+            //    14 - .text section
+            //    shent_size - size of section
+            //    0x20 - skipping 40 bytes of zeros
+          if (numbers_size == 8) {
+              text_size = shoff + (14 * shent_size) + 0x20; 
+          }
+          else {
+              text_size = shoff + (13 * shent_size) + 0x14;
+          }
+          File.seekg(text_size);
+          File.read(reinterpret_cast<char*>(&text_size), 4);
+          for (size_t i = 0; i < text_size; ++i) {
+               File.seekg(entry + i);
+               File.read(reinterpret_cast<char*>(&byte), 1);
+               insiders.push_back(byte);
           }
      }
-     else if (Format == "WIN") {
+     else if (Format == "WIN") { 
+          uint16_t sections_amount {};
+          uint32_t signature {};
+          uint16_t arch_spec_text_section {};
+          std::string str {}; 
+          str.resize(4); // needed so .read() writes to existing place
           File.seekg(0x3C);
-          File.read(reinterpret_cast<char*>(&Arch), sizeof(Arch));
-          File.seekg(Arch + 4);
-          Arch = readLittleEndian(File);
-          if (Arch == 0x8664) {
-               string.push_back("x86-64");
-          }
-          else if (Arch == 0x014C) {
-               string.push_back("x86");
-          }
-          else {
-               std::cerr << "Unknown Windows architecture \n";
+          File.read(reinterpret_cast<char*>(&signature), 4);
+          File.seekg(signature);
+          File.read(&str[0], 4);
+          const std::string tmp("PE\0\0", 4);
+          if (str != tmp) {
                return;
           }
-          File.seekg(0x18);
-          File.read(reinterpret_cast<char*>(&entry), sizeof(entry));
-          File.seekg(entry);
-          for (int i = 0; File.read(reinterpret_cast<char*>(&byte), 1); ++i) {
-               opcodes.push_back(byte);
+          File.seekg(signature + 4);
+          File.read(reinterpret_cast<char*>(&Arch), sizeof(Arch));
+          if (Arch == 0x8664) {
+               ARCH_X64 = true;
+               output.push_back("x86-64");
+               output.push_back("");
+               arch_spec_text_section = 0x188;
+
+          }
+          else if (Arch == 0x014C) {
+               ARCH_X64 = false;
+               output.push_back("x86");
+               output.push_back("");
+               arch_spec_text_section = 0x178;
+
+          }
+          else {
+               output.clear();
+               std::cerr << "Unknown Windows architecture: " + std::to_string(Arch) << std::endl;
+               return;
+          }
+          File.seekg(signature + 6);
+          File.read(reinterpret_cast<char*>(&sections_amount), 2);
+          File.seekg(arch_spec_text_section + 8); 
+          File.read(reinterpret_cast<char*>(&text_size), 4); 
+          File.seekg(arch_spec_text_section + 20);
+          File.read(reinterpret_cast<char*>(&entry), 4);
+          for (size_t i = 0; i < text_size; ++i) {
+               File.seekg(entry + i);
+               File.read(reinterpret_cast<char*>(&byte), 1);
+               insiders.push_back(byte);
           }
      }
      else {
+          output.clear();
           std::cerr << "Format error \n";
           std::cerr.flush();
           return;
      }
-     
-     for (int y = 0; y < opcodes.size() - 1; ++y) {
-          for (int x = 0; x < commands64bit.size() - 1; ++x) {
-               if (commands64bit[x].code == opcodes[y]) {
-                    builder = (commands64bit[x].call);
-                    builder += " ";
-                    builder += std::to_string(opcodes[y + 1]);
-                    string.push_back(builder);
+     for (size_t y = 0; y < insiders.size(); ++y) {
+          for (size_t x = 0; x < commands.size(); ++x) {
+               if (commands[x].opcode == insiders[y]) {
+                    if (strcmp(commands[x].called, EMPTY) != 0) {
+                         builder = (commands[x].called);
+                         if (builder.find("push") != std::string::npos) {
+                              if (!ARCH_X64) {
+                                   std::vector <std::string> temp = Converter.ChangeRegistersSize(builder.substr(5), 32);
+                                   builder = "push " + temp.front();
+                              }
+                         }
+                         else if (builder.find("pop") != std::string::npos) {
+                              if (!ARCH_X64) {
+                                   std::vector <std::string> temp = Converter.ChangeRegistersSize(builder.substr(4), 32);
+                                   builder = "pop " + temp.front();
+                              } 
+                         }
+                         y++;
+                         output.push_back(builder);
+                         builder.assign(builder.length(), '\0');
+                         builder.clear();
+                         break;
+                    }
+                    size_t z = 0;
+                    switch(commands[x].opcode) {
+                         case 0x0F: {
+                              if (insiders[y+1] == 0x22) {
+                                   builder = "mov ";    
+                                   unsigned short temp = insiders[y + 2];
+                                   unsigned short mod = (temp >> 6) & 0b11; // get 2 bit value 
+                                   unsigned short rg1 = (temp >> 0) & 0b111; // get 3 bit value
+                                   unsigned short rg2 = (temp >> 3) & 0b111; // get 3 bit value
+                                   if (mod != 0b11) {
+                                   std::cerr << "Unknown mod of command" << std::endl;
+                                   output.clear();
+                                   return;
+                                   }
+                                   switch (rg1) {
+                                        case 0: builder += "cr0, "; break;
+                                        case 1: builder += "cr1, "; break;
+                                        case 2: builder += "cr2, "; break;
+                                        case 3: builder += "cr3, "; break;
+                                        case 4: builder += "cr4, "; break;
+                                        default: {
+                                             std::cerr << "Unknown register of command" << std::endl;
+                                             output.clear();
+                                             return;
+                                        }
+                                   }
+                                   if (ARCH_X64) { 
+                                        switch (rg2) {
+                                             case 0: {
+                                                  builder += "rax";
+                                                  break;
+                                             }
+                                             case 1: {
+                                                  builder += "rcx";
+                                                  break;
+                                             }
+                                             case 2: {
+                                                  builder += "rdx";
+                                                  break;
+                                             }
+                                             case 3: {
+                                                  builder += "rbx";
+                                                  break;
+                                             }
+                                             case 4: {
+                                                  builder += "rsp";
+                                                  break;
+                                             }
+                                             case 5: {
+                                                  builder += "rbp";
+                                                  break;
+                                             }
+                                             case 6: {
+                                                  builder += "rsi";
+                                                  break;
+                                             }
+                                             case 7: {
+                                                  builder += "rdi";
+                                                  break;
+                                             }
+                                             default: {
+                                                  std::cerr << "Unknown register of command" << std::endl;
+                                                  output.clear();
+                                                  return;
+                                             }
+                                        }
+                                   }
+                                   else {
+                                        switch (rg2) {
+                                             case 0: {
+                                                  builder += "eax";
+                                                  break;
+                                             }
+                                             case 1: {
+                                                  builder += "ecx";
+                                                  break;
+                                             }
+                                             case 2: {
+                                                  builder += "edx";
+                                                  break;
+                                             }
+                                             case 3: {
+                                                  builder += "ebx";
+                                                  break;
+                                             }
+                                             case 4: {
+                                                  builder += "esp";
+                                                  break;
+                                             }
+                                             case 5: {
+                                                  builder += "ebp";
+                                                  break;
+                                             }
+                                             case 6: {
+                                                  builder += "esi";
+                                                  break;
+                                             }
+                                             case 7: {
+                                                  builder += "edi";
+                                                  break;
+                                             }
+                                             default: {
+                                                  std::cerr << "Unknown register of command" << std::endl;
+                                                  output.clear();
+                                                  return;
+                                             }
+                                        }
+                                   }
+                                   
+                              }
+                              z += 2;
+                              break;
+                        }
+                        case 0x88: {
+                              unsigned short temp = insiders[y+1];
+                              unsigned short mod = (temp >> 6) & 0b11;
+                              unsigned short rg1 = (temp >> 0) & 0b111;
+                              unsigned short rg2 = (temp >> 3) & 0b111;
+                              builder = "mov ";
+                              if (mod != 0b11) {
+                                   std::cerr << "Unknown mod of command" << std::endl;
+                                   output.clear();
+                                   return;
+                              }
+                              if (ARCH_X64) { 
+                                   switch (rg1) {
+                                        case 0: {
+                                             builder += "rax, ";
+                                             break;
+                                        }
+                                        case 1: {
+                                             builder += "rcx, ";
+                                             break;
+                                        }
+                                        case 2: {
+                                             builder += "rdx, ";
+                                             break;
+                                        }
+                                        case 3: {
+                                             builder += "rbx, ";
+                                             break;
+                                        }
+                                        case 4: {
+                                             builder += "rsp, ";
+                                             break;
+                                        }
+                                        case 5: {
+                                             builder += "rbp, ";
+                                             break;
+                                        }
+                                        case 6: {
+                                             builder += "rsi, ";
+                                             break;
+                                        }
+                                        case 7: {
+                                             builder += "rdi, ";
+                                             break;
+                                        }
+                                        default: {
+                                             std::cerr << "Unknown register of command" << std::endl;
+                                             output.clear();
+                                             return;
+                                        }
+                                   }
+                                   switch (rg2) {
+                                        case 0: {
+                                             builder += "rax";
+                                             break;
+                                        }
+                                        case 1: {
+                                             builder += "rcx";
+                                             break;
+                                        }
+                                        case 2: {
+                                             builder += "rdx";
+                                             break;
+                                        }
+                                        case 3: {
+                                             builder += "rbx";
+                                             break;
+                                        }
+                                        case 4: {
+                                             builder += "rsp";
+                                             break;
+                                        }
+                                        case 5: {
+                                             builder += "rbp";
+                                             break;
+                                        }
+                                        case 6: {
+                                             builder += "rsi";
+                                             break;
+                                        }
+                                        case 7: {
+                                             builder += "rdi";
+                                             break;
+                                        }
+                                        default: {
+                                             std::cerr << "Unknown register of command" << std::endl;
+                                             output.clear();
+                                             return; 
+                                        }
+                                   }
+                              }
+                              else {
+                                   switch (rg1) {
+                                        case 0: {
+                                             builder += "eax, ";
+                                             break;
+                                        }
+                                        case 1: {
+                                             builder += "ecx, ";
+                                             break;
+                                        }
+                                        case 2: {
+                                             builder += "edx, ";
+                                             break;
+                                        }
+                                        case 3: {
+                                             builder += "ebx, ";
+                                             break;
+                                        }
+                                        case 4: {
+                                             builder += "esp, ";
+                                             break;
+                                        }
+                                        case 5: {
+                                             builder += "ebp, ";
+                                             break;
+                                        }
+                                        case 6: {
+                                             builder += "esi, ";
+                                             break;
+                                        }
+                                        case 7: {
+                                             builder += "edi, ";
+                                             break;
+                                        }
+                                        default: {
+                                             std::cerr << "Unknown register of command" << std::endl;
+                                             output.clear();
+                                             return;
+                                        }
+                                   }
+                                   switch (rg2) {
+                                        case 0: {
+                                             builder += "eax";
+                                             break;
+                                        }
+                                        case 1: {
+                                             builder += "ecx";
+                                             break;
+                                        }
+                                        case 2: {
+                                             builder += "edx";
+                                             break;
+                                        }
+                                        case 3: {
+                                             builder += "ebx";
+                                             break;
+                                        }
+                                        case 4: {
+                                             builder += "esp";
+                                             break;
+                                        }
+                                        case 5: {
+                                             builder += "ebp";
+                                             break;
+                                        }
+                                        case 6: {
+                                             builder += "esi";
+                                             break;
+                                        }
+                                        case 7: {
+                                             builder += "edi";
+                                             break;
+                                        }
+                                        default: {
+                                             std::cerr << "Unknown register of command" << std::endl;
+                                             output.clear();
+                                             return; 
+                                        }
+                                   }
+                              }
+                              z += 1;
+                              break;
+                         }
+                         case 0x89: {
+                              unsigned short temp = insiders[y+1];
+                              unsigned short mod = (temp >> 6) & 0b11;
+                              unsigned short rg1 = (temp >> 0) & 0b111;
+                              unsigned short rg2 = (temp >> 3) & 0b111;
+                              builder = "mov ";
+                              if (mod != 0b11) {
+                                   std::cerr << "Unknown mod of command" << std::endl;
+                                   output.clear();
+                                   return;
+                              }
+                              if (ARCH_X64) {
+                                   switch (rg1) {
+                                        case 0: {
+                                             builder += "rax, ";
+                                             break;
+                                        }
+                                        case 1: {
+                                             builder += "rcx, ";
+                                             break;
+                                        }
+                                        case 2: {
+                                             builder += "rdx, ";
+                                             break;
+                                        }
+                                        case 3: {
+                                             builder += "rbx, ";
+                                             break;
+                                        }
+                                        case 4: {
+                                             builder += "rsp, ";
+                                             break;
+                                        }
+                                        case 5: {
+                                             builder += "rbp, ";
+                                             break;
+                                        }
+                                        case 6: {
+                                             builder += "rsi, ";
+                                             break;
+                                        }
+                                        case 7: {
+                                             builder += "rdi, ";
+                                             break;
+                                        }
+                                        default: {
+                                             std::cerr << "Unknown register of command" << std::endl;
+                                             output.clear();
+                                             return;
+                                        }
+                                   }
+                                   switch (rg2) {
+                                        case 0: {
+                                             builder += "rax";
+                                             break;
+                                        }
+                                        case 1: {
+                                             builder += "rcx";
+                                             break;
+                                        }
+                                        case 2: {
+                                             builder += "rdx";
+                                             break;
+                                        }
+                                        case 3: {
+                                             builder += "rbx";
+                                             break;
+                                        }
+                                        case 4: {
+                                             builder += "rsp";
+                                             break;
+                                        }
+                                        case 5: {
+                                             builder += "rbp";
+                                             break;
+                                        }
+                                        case 6: {
+                                             builder += "rsi";
+                                             break;
+                                        }
+                                        case 7: {
+                                             builder += "rdi";
+                                             break;
+                                        }
+                                        default: {
+                                             std::cerr << "Unknown register of command" << std::endl;
+                                             output.clear();
+                                             return; 
+                                        }
+                                   }
+                              }
+                              else {
+                                   switch (rg1) {
+                                        case 0: {
+                                             builder += "eax, ";
+                                             break;
+                                        }
+                                        case 1: {
+                                             builder += "ecx, ";
+                                             break;
+                                        }
+                                        case 2: {
+                                             builder += "edx, ";
+                                             break;
+                                        }
+                                        case 3: {
+                                             builder += "ebx, ";
+                                             break;
+                                        }
+                                        case 4: {
+                                             builder += "esp, ";
+                                             break;
+                                        }
+                                        case 5: {
+                                             builder += "ebp, ";
+                                             break;
+                                        }
+                                        case 6: {
+                                             builder += "esi, ";
+                                             break;
+                                        }
+                                        case 7: {
+                                             builder += "edi, ";
+                                             break;
+                                        }
+                                        default: {
+                                             std::cerr << "Unknown register of command" << std::endl;
+                                             output.clear();
+                                             return;
+                                        }
+                                   }
+                                   switch (rg2) {
+                                        case 0: {
+                                             builder += "eax";
+                                             break;
+                                        }
+                                        case 1: {
+                                             builder += "ecx";
+                                             break;
+                                        }
+                                        case 2: {
+                                             builder += "edx";
+                                             break;
+                                        }
+                                        case 3: {
+                                             builder += "ebx";
+                                             break;
+                                        }
+                                        case 4: {
+                                             builder += "esp";
+                                             break;
+                                        }
+                                        case 5: {
+                                             builder += "ebp";
+                                             break;
+                                        }
+                                        case 6: {
+                                             builder += "esi";
+                                             break;
+                                        }
+                                        case 7: {
+                                             builder += "edi";
+                                             break;
+                                        }
+                                        default: {
+                                             std::cerr << "Unknown register of command" << std::endl;
+                                             output.clear();
+                                             return; 
+                                        }
+                                   }
+                              }
+
+                              z += 1;
+                              break;
+                         }
+                         case 0x8B: {
+                              unsigned short temp = insiders[y+1];
+                              unsigned short mod = (temp >> 6) & 0b11;
+                              unsigned short rg1 = (temp >> 0) & 0b111;
+                              unsigned short rg2 = (temp >> 3) & 0b111;
+                              [[maybe_unused]]uint32_t disp;
+                              if (mod == 0b10) {
+                                   if (rg1 == 0b100) {
+                                        disp = *(reinterpret_cast<uint32_t*>(&insiders[y+3]));
+                                        z += 2;
+                                   }
+                                   else {
+                                        disp = *(reinterpret_cast<uint32_t*>(&insiders[y+2]));
+                                         z += 1;
+                                   }
+                              }
+                              else if (mod == 0b01) {
+                                   if (rg1 == 0b100) {
+                                        disp = *(reinterpret_cast<uint32_t*>(&insiders[y+3]));
+                                        z += 2;
+                                   }
+                                   else {
+                                        disp = *(reinterpret_cast<uint32_t*>(&insiders[y+2]));
+                                        z += 1;
+                                   }
+                              }
+                              else if (mod == 0b00) {
+                                   if (rg1 == 0b100) {
+                                        if (((*(reinterpret_cast<uint8_t*>(&insiders[y+2]))) & 0b111) == 0b101) {
+                                            disp = *(reinterpret_cast<uint32_t*>(&insiders[y+3]));
+                                            z += 2;
+                                        }
+                                        else {
+                                            disp = *(reinterpret_cast<uint32_t*>(&insiders[y+2]));
+                                            z += 1;
+                                        }
+                                   }
+                                   else if (rg1 == 0b101) {
+                                        disp = *(reinterpret_cast<uint32_t*>(&insiders[y+2]));
+                                        z += 1;
+                                   }
+                                   else {
+                                        disp = 0;
+                                   }
+                              }
+                              else {
+                                   std::cerr << "unknown mod of command" << std::endl;
+                                   output.clear();
+                                   return;
+                              }
+                              
+                              builder = "mov ";
+                              if (ARCH_X64) { 
+                                   switch (rg1) {
+                                        case 0: {
+                                             builder += "rax, ";
+                                             break;
+                                        }
+                                        case 1: {
+                                             builder += "rcx, ";
+                                             break;
+                                        }
+                                        case 2: {
+                                             builder += "rdx, ";
+                                             break;
+                                        }
+                                        case 3: {
+                                             builder += "rbx, ";
+                                             break;
+                                        }
+                                        case 4: {
+                                             builder += "rsp, ";
+                                             break;
+                                        }
+                                        case 5: {
+                                             builder += "rbp, ";
+                                             break;
+                                        }
+                                        case 6: {
+                                             builder += "rsi, ";
+                                             break;
+                                        }
+                                        case 7: {
+                                             builder += "rdi, ";
+                                             break;
+                                        }
+                                        default: {
+                                             std::cerr << "Unknown register of command" << std::endl;
+                                             output.clear();
+                                             return;
+                                        }
+                                   }
+                                   switch (rg2) {
+                                        case 0: {
+                                             builder += "rax";
+                                             break;
+                                        }
+                                        case 1: {
+                                             builder += "rcx";
+                                             break;
+                                        }
+                                        case 2: {
+                                             builder += "rdx";
+                                             break;
+                                        }
+                                        case 3: {
+                                             builder += "rbx";
+                                             break;
+                                        }
+                                        case 4: {
+                                             builder += "rsp";
+                                             break;
+                                        }
+                                        case 5: {
+                                             builder += "rbp";
+                                             break;
+                                        }
+                                        case 6: {
+                                             builder += "rsi";
+                                             break;
+                                        }
+                                        case 7: {
+                                             builder += "rdi";
+                                             break;
+                                        }
+                                        default: {
+                                             std::cerr << "Unknown register of command" << std::endl;
+                                             output.clear();
+                                             return; 
+                                        }
+                                   }
+                              }
+                              else {
+                                   switch (rg1) {
+                                        case 0: {
+                                             builder += "eax, ";
+                                             break;
+                                        }
+                                        case 1: {
+                                             builder += "ecx, ";
+                                             break;
+                                        }
+                                        case 2: {
+                                             builder += "edx, ";
+                                             break;
+                                        }
+                                        case 3: {
+                                             builder += "ebx, ";
+                                             break;
+                                        }
+                                        case 4: {
+                                             builder += "esp, ";
+                                             break;
+                                        }
+                                        case 5: {
+                                             builder += "ebp, ";
+                                             break;
+                                        }
+                                        case 6: {
+                                             builder += "esi, ";
+                                             break;
+                                        }
+                                        case 7: {
+                                             builder += "edi, ";
+                                             break;
+                                        }
+                                        default: {
+                                             std::cerr << "Unknown register of command" << std::endl;
+                                             output.clear();
+                                             return;
+                                        }
+                                   }
+                                   switch (rg2) {
+                                        case 0: {
+                                             builder += "eax";
+                                             break;
+                                        }
+                                        case 1: {
+                                             builder += "ecx";
+                                             break;
+                                        }
+                                        case 2: {
+                                             builder += "edx";
+                                             break;
+                                        }
+                                        case 3: {
+                                             builder += "ebx";
+                                             break;
+                                        }
+                                        case 4: {
+                                             builder += "esp";
+                                             break;
+                                        }
+                                        case 5: {
+                                             builder += "ebp";
+                                             break;
+                                        }
+                                        case 6: {
+                                             builder += "esi";
+                                             break;
+                                        }
+                                        case 7: {
+                                             builder += "edi";
+                                             break;
+                                        }
+                                        default: {
+                                             std::cerr << "Unknown register of command" << std::endl;
+                                             output.clear();
+                                             return; 
+                                        }
+                                   }
+                              }
+
+                              z += 1;
+                              break;
+                         }
+                         case 0x8D: {
+                              unsigned short temp = insiders[y+1];
+                              unsigned short mod = (temp >> 6) & 0b11;
+                              unsigned short rg1 = (temp >> 0) & 0b111;
+                              unsigned short rg2 = (temp >> 3) & 0b111;
+                              [[maybe_unused]]uint32_t disp;
+                              if (mod == 0b10) {
+                                   if (rg1 == 0b100) {
+                                        disp = *(reinterpret_cast<uint32_t*>(&insiders[y+3]));
+                                        z += 2;
+                                   }
+                                   else {
+                                        disp = *(reinterpret_cast<uint32_t*>(&insiders[y+2]));
+                                         z += 1;
+                                   }
+                              }
+                              else if (mod == 0b01) {
+                                   if (rg1 == 0b100) {
+                                        disp = *(reinterpret_cast<uint32_t*>(&insiders[y+3]));
+                                        z += 2;
+                                   }
+                                   else {
+                                        disp = *(reinterpret_cast<uint32_t*>(&insiders[y+2]));
+                                        z += 1;
+                                   }
+                              }
+                              else if (mod == 0b00) {
+                                   if (rg1 == 0b100) {
+                                        if (((*(reinterpret_cast<uint8_t*>(&insiders[y+2]))) & 0b111) == 0b101) {
+                                            disp = *(reinterpret_cast<uint32_t*>(&insiders[y+3]));
+                                            z += 2;
+                                        }
+                                        else {
+                                            disp = *(reinterpret_cast<uint32_t*>(&insiders[y+2]));
+                                            z += 1;
+                                        }
+                                   }
+                                   else if (rg1 == 0b101) {
+                                        disp = *(reinterpret_cast<uint32_t*>(&insiders[y+2]));
+                                        z += 1;
+                                   }
+                                   else {
+                                        disp = 0;
+                                   }
+                              }
+                              else {
+                                   std::cerr << "unknown mod of command" << std::endl;
+                                   output.clear();
+                                   return;
+                              }
+                              builder = "lea ";
+                              if (ARCH_X64) { 
+                                   switch (rg1) {
+                                        case 0: {
+                                             builder += "rax, ";
+                                             break;
+                                        }
+                                        case 1: {
+                                             builder += "rcx, ";
+                                             break;
+                                        }
+                                        case 2: {
+                                             builder += "rdx, ";
+                                             break;
+                                        }
+                                        case 3: {
+                                             builder += "rbx, ";
+                                             break;
+                                        }
+                                        case 4: {
+                                             builder += "rsp, ";
+                                             break;
+                                        }
+                                        case 5: {
+                                             builder += "rbp, ";
+                                             break;
+                                        }
+                                        case 6: {
+                                             builder += "rsi, ";
+                                             break;
+                                        }
+                                        case 7: {
+                                             builder += "rdi, ";
+                                             break;
+                                        }
+                                        default: {
+                                             std::cerr << "Unknown register of command" << std::endl;
+                                             output.clear();
+                                             return;
+                                        }
+                                   }
+                                   switch (rg2) {
+                                        case 0: {
+                                             builder += "rax";
+                                             break;
+                                        }
+                                        case 1: {
+                                             builder += "rcx";
+                                             break;
+                                        }
+                                        case 2: {
+                                             builder += "rdx";
+                                             break;
+                                        }
+                                        case 3: {
+                                             builder += "rbx";
+                                             break;
+                                        }
+                                        case 4: {
+                                             builder += "rsp";
+                                             break;
+                                        }
+                                        case 5: {
+                                             builder += "rbp";
+                                             break;
+                                        }
+                                        case 6: {
+                                             builder += "rsi";
+                                             break;
+                                        }
+                                        case 7: {
+                                             builder += "rdi";
+                                             break;
+                                        }
+                                        default: {
+                                             std::cerr << "Unknown register of command" << std::endl;
+                                             output.clear();
+                                             return; 
+                                        }
+                                   }
+                              }
+                              else {
+                                   switch (rg1) {
+                                        case 0: {
+                                             builder += "eax, ";
+                                             break;
+                                        }
+                                        case 1: {
+                                             builder += "ecx, ";
+                                             break;
+                                        }
+                                        case 2: {
+                                             builder += "edx, ";
+                                             break;
+                                        }
+                                        case 3: {
+                                             builder += "ebx, ";
+                                             break;
+                                        }
+                                        case 4: {
+                                             builder += "esp, ";
+                                             break;
+                                        }
+                                        case 5: {
+                                             builder += "ebp, ";
+                                             break;
+                                        }
+                                        case 6: {
+                                             builder += "esi, ";
+                                             break;
+                                        }
+                                        case 7: {
+                                             builder += "edi, ";
+                                             break;
+                                        }
+                                        default: {
+                                             std::cerr << "Unknown register of command" << std::endl;
+                                             output.clear();
+                                             return;
+                                        }
+                                   }
+                                   switch (rg2) {
+                                        case 0: {
+                                             builder += "eax";
+                                             break;
+                                        }
+                                        case 1: {
+                                             builder += "ecx";
+                                             break;
+                                        }
+                                        case 2: {
+                                             builder += "edx";
+                                             break;
+                                        }
+                                        case 3: {
+                                             builder += "ebx";
+                                             break;
+                                        }
+                                        case 4: {
+                                             builder += "esp";
+                                             break;
+                                        }
+                                        case 5: {
+                                             builder += "ebp";
+                                             break;
+                                        }
+                                        case 6: {
+                                             builder += "esi";
+                                             break;
+                                        }
+                                        case 7: {
+                                             builder += "edi";
+                                             break;
+                                        }
+                                        default: {
+                                             std::cerr << "Unknown register of command" << std::endl;
+                                             output.clear();
+                                             return; 
+                                        }
+                                   }
+                              }
+
+                              z += 1;
+                              break;
+                         }
+                         case 0xE8: {
+                              unsigned short temp = insiders[y+1];
+                              hexer << std::hex << reinterpret_cast<unsigned short*>(temp);
+                              builder = "call " + hexer.str();
+                              hexer.str("");
+                              hexer.clear();
+                              z += 1;
+                              break;
+                         }
+
+                         default: {
+                              z++;
+                              break;
+                         }
+                    }
+                    size_t extra_zeros = z;
+                    while (insiders[y + 1 + extra_zeros] == 0x0 && insiders[y + 2 + extra_zeros] == 0x0 && (y + 1 + extra_zeros < insiders.size())) {
+                        extra_zeros += 2;
+                    }
+                    y += z;
+                    if (extra_zeros != z) {
+                        y += extra_zeros - z;
+                    }
+                    output.push_back(builder);
+                    builder.assign(builder.length(), '\0');
                     builder.clear();
-                    y++;
                     break;
                }
                else {
                     continue;
                }
           }
-         // std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(y) << " ";
      }
      return;
 }

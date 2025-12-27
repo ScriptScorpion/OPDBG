@@ -1,22 +1,8 @@
-CXX = g++            
-CXXFLAGS = -std=c++17 -lncurses 
-TARGET = exe       
+CXX := g++
+CXXFLAGS := -std=c++17 -Wall -Wextra -lncurses -O1
+TARGET := asmdump
 
-SRCS = main.cpp converter.cpp
-
-all: $(TARGET)
-
-clean:
-	rm $(TARGET)
-
+SRCS := main.cpp converter.cpp
 
 $(TARGET): $(SRCS)
 	$(CXX) $(SRCS) -o $@ $(CXXFLAGS)
-
-
-#OS := $(shell uname)
-#ifeq ($(OS), Windows_NT)
-# do Windows compilation
-#else
-# do Unix compilation
-#endif
