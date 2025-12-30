@@ -1277,9 +1277,11 @@ void Parse(std::vector <std::string> &output, const std::string &Format, std::if
                                              break;
                                         }
                                         default: {
-                                             std::cerr << "Unknown register of command" << std::endl;
-                                             output.clear();
-                                             return; 
+                                             hexer << std::hex << reinterpret_cast<unsigned short*>(rg2);
+                                             builder += hexer.str();
+                                             hexer.str("");
+                                             hexer.clear();
+                                             break;
                                         }
                                    }
                               }
@@ -1357,9 +1359,11 @@ void Parse(std::vector <std::string> &output, const std::string &Format, std::if
                                              break;
                                         }
                                         default: {
-                                             std::cerr << "Unknown register of command" << std::endl;
-                                             output.clear();
-                                             return; 
+                                             hexer << std::hex << reinterpret_cast<unsigned short*>(rg2);
+                                             builder += hexer.str();
+                                             hexer.str("");
+                                             hexer.clear();
+                                             break;
                                         }
                                    }
                               }
@@ -1451,9 +1455,11 @@ void Parse(std::vector <std::string> &output, const std::string &Format, std::if
                                              break;
                                         }
                                         default: {
-                                             std::cerr << "Unknown register of command" << std::endl;
-                                             output.clear();
-                                             return; 
+                                             hexer << std::hex << reinterpret_cast<unsigned short*>(rg2);
+                                             builder += hexer.str();
+                                             hexer.str("");
+                                             hexer.clear();
+                                             break; 
                                         }
                                    }
                               }
@@ -1531,9 +1537,11 @@ void Parse(std::vector <std::string> &output, const std::string &Format, std::if
                                              break;
                                         }
                                         default: {
-                                             std::cerr << "Unknown register of command" << std::endl;
-                                             output.clear();
-                                             return; 
+                                             hexer << std::hex << reinterpret_cast<unsigned short*>(rg2);
+                                             builder += hexer.str();
+                                             hexer.str("");
+                                             hexer.clear();
+                                             break; 
                                         }
                                    }
                               }
@@ -1544,8 +1552,8 @@ void Parse(std::vector <std::string> &output, const std::string &Format, std::if
                          case 0x8B: {
                               unsigned short temp = insiders[y+1];
                               unsigned short mod = (temp >> 6) & 0b11;
-                              unsigned short rg1 = (temp >> 0) & 0b111;
-                              unsigned short rg2 = (temp >> 3) & 0b111;
+                              unsigned short rg1 = (temp >> 3) & 0b111;
+                              unsigned short rg2 = (temp >> 0) & 0b111;
                               [[maybe_unused]]uint32_t disp;
                               if (mod == 0b10) {
                                    if (rg1 == 0b100) {
@@ -1635,41 +1643,43 @@ void Parse(std::vector <std::string> &output, const std::string &Format, std::if
                                    }
                                    switch (rg2) {
                                         case 0: {
-                                             builder += "rax";
+                                             builder += "QWORD [rax]";
                                              break;
                                         }
                                         case 1: {
-                                             builder += "rcx";
+                                             builder += "QWORD [rcx]";
                                              break;
                                         }
                                         case 2: {
-                                             builder += "rdx";
+                                             builder += "QWORD [rdx]";
                                              break;
                                         }
                                         case 3: {
-                                             builder += "rbx";
+                                             builder += "QWORD [rbx]";
                                              break;
                                         }
                                         case 4: {
-                                             builder += "rsp";
+                                             builder += "QWORD [rsp]";
                                              break;
                                         }
                                         case 5: {
-                                             builder += "rbp";
+                                             builder += "QWORD [rbp]";
                                              break;
                                         }
                                         case 6: {
-                                             builder += "rsi";
+                                             builder += "QWORD [rsi]";
                                              break;
                                         }
                                         case 7: {
-                                             builder += "rdi";
+                                             builder += "QWORD [rdi]";
                                              break;
                                         }
                                         default: {
-                                             std::cerr << "Unknown register of command" << std::endl;
-                                             output.clear();
-                                             return; 
+                                             hexer << std::hex << reinterpret_cast<unsigned short*>(rg2);
+                                             builder += hexer.str();
+                                             hexer.str("");
+                                             hexer.clear();
+                                             break;
                                         }
                                    }
                               }
@@ -1715,41 +1725,43 @@ void Parse(std::vector <std::string> &output, const std::string &Format, std::if
                                    }
                                    switch (rg2) {
                                         case 0: {
-                                             builder += "eax";
+                                             builder += "DWORD [eax]";
                                              break;
                                         }
                                         case 1: {
-                                             builder += "ecx";
+                                             builder += "DWORD [ecx]";
                                              break;
                                         }
                                         case 2: {
-                                             builder += "edx";
+                                             builder += "DWORD [edx]";
                                              break;
                                         }
                                         case 3: {
-                                             builder += "ebx";
+                                             builder += "DWORD [ebx]";
                                              break;
                                         }
                                         case 4: {
-                                             builder += "esp";
+                                             builder += "DWORD [esp]";
                                              break;
                                         }
                                         case 5: {
-                                             builder += "ebp";
+                                             builder += "DWORD [ebp]";
                                              break;
                                         }
                                         case 6: {
-                                             builder += "esi";
+                                             builder += "DWORD [esi]";
                                              break;
                                         }
                                         case 7: {
-                                             builder += "edi";
+                                             builder += "DWORD [edi]";
                                              break;
                                         }
                                         default: {
-                                             std::cerr << "Unknown register of command" << std::endl;
-                                             output.clear();
-                                             return; 
+                                             hexer << std::hex << reinterpret_cast<unsigned short*>(rg2);
+                                             builder += hexer.str();
+                                             hexer.str("");
+                                             hexer.clear();
+                                             break;
                                         }
                                    }
                               }
@@ -1760,8 +1772,8 @@ void Parse(std::vector <std::string> &output, const std::string &Format, std::if
                          case 0x8D: {
                               unsigned short temp = insiders[y+1];
                               unsigned short mod = (temp >> 6) & 0b11;
-                              unsigned short rg1 = (temp >> 0) & 0b111;
-                              unsigned short rg2 = (temp >> 3) & 0b111;
+                              unsigned short rg1 = (temp >> 3) & 0b111;
+                              unsigned short rg2 = (temp >> 0) & 0b111;
                               [[maybe_unused]]uint32_t disp;
                               if (mod == 0b10) {
                                    if (rg1 == 0b100) {
@@ -1882,9 +1894,11 @@ void Parse(std::vector <std::string> &output, const std::string &Format, std::if
                                              break;
                                         }
                                         default: {
-                                             std::cerr << "Unknown register of command" << std::endl;
-                                             output.clear();
-                                             return; 
+                                             hexer << std::hex << reinterpret_cast<unsigned short*>(rg2);
+                                             builder += hexer.str();
+                                             hexer.str("");
+                                             hexer.clear();
+                                             break;
                                         }
                                    }
                               }
@@ -1962,9 +1976,11 @@ void Parse(std::vector <std::string> &output, const std::string &Format, std::if
                                              break;
                                         }
                                         default: {
-                                             std::cerr << "Unknown register of command" << std::endl;
-                                             output.clear();
-                                             return; 
+                                             hexer << std::hex << reinterpret_cast<unsigned short*>(rg2);
+                                             builder += hexer.str();
+                                             hexer.str("");
+                                             hexer.clear();
+                                             break;
                                         }
                                    }
                               }
