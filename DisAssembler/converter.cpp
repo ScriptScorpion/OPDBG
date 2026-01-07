@@ -25,6 +25,7 @@ struct Commands {
              case 0x8B: return 48;
              case 0x8D: return 48;
              case 0xE8: return 48;
+             case 0xE9: return 48;
          }
      }
 };
@@ -917,6 +918,7 @@ void Parse(std::vector <std::string> &output, const std::string &Format, std::if
           {0x8B, EMPTY}, // mov 
           {0x8D, EMPTY}, // lea
           {0xE8, EMPTY}, // call
+          {0xE9, EMPTY}, // jmp
 
           {0x90, "nop"},
           {0xC3, "ret"}, // no input
@@ -1085,14 +1087,9 @@ void Parse(std::vector <std::string> &output, const std::string &Format, std::if
                               if (insiders[y+1] == 0x22) {
                                    builder = "mov ";    
                                    unsigned short temp = insiders[y + 2];
-                                   unsigned short mod = (temp >> 6) & 0b11; // get 2 bit value 
+                                   [[maybe_unused]]unsigned short mod = (temp >> 6) & 0b11; // get 2 bit value 
                                    unsigned short rg1 = (temp >> 0) & 0b111; // get 3 bit value
                                    unsigned short rg2 = (temp >> 3) & 0b111; // get 3 bit value
-                                   if (mod != 0b11) {
-                                   std::cerr << "Unknown mod of command" << std::endl;
-                                   output.clear();
-                                   return;
-                                   }
                                    switch (rg1) {
                                         case 0: builder += "cr0, "; break;
                                         case 1: builder += "cr1, "; break;
@@ -1194,15 +1191,10 @@ void Parse(std::vector <std::string> &output, const std::string &Format, std::if
                         }
                         case 0x88: {
                               unsigned short temp = insiders[y+1];
-                              unsigned short mod = (temp >> 6) & 0b11;
+                              [[maybe_unused]]unsigned short mod = (temp >> 6) & 0b11;
                               unsigned short rg1 = (temp >> 0) & 0b111;
                               unsigned short rg2 = (temp >> 3) & 0b111;
                               builder = "mov ";
-                              if (mod != 0b11) {
-                                   std::cerr << "Unknown mod of command" << std::endl;
-                                   output.clear();
-                                   return;
-                              }
                               if (ARCH_X64) { 
                                    switch (rg1) {
                                         case 0: {
@@ -1372,15 +1364,10 @@ void Parse(std::vector <std::string> &output, const std::string &Format, std::if
                          }
                          case 0x89: {
                               unsigned short temp = insiders[y+1];
-                              unsigned short mod = (temp >> 6) & 0b11;
+                              [[maybe_unused]]unsigned short mod = (temp >> 6) & 0b11;
                               unsigned short rg1 = (temp >> 0) & 0b111;
                               unsigned short rg2 = (temp >> 3) & 0b111;
                               builder = "mov ";
-                              if (mod != 0b11) {
-                                   std::cerr << "Unknown mod of command" << std::endl;
-                                   output.clear();
-                                   return;
-                              }
                               if (ARCH_X64) {
                                    switch (rg1) {
                                         case 0: {
@@ -1989,22 +1976,36 @@ void Parse(std::vector <std::string> &output, const std::string &Format, std::if
                               break;
                          }
                          case 0xE8: {
-                              unsigned short temp = insiders[y+1];
-                              hexer << std::hex << reinterpret_cast<unsigned short*>(temp);
+                              unsigned short temp1 = insiders[y+1];
+                              unsigned short temp2 = insiders[y+2];
+                              unsigned short temp3 = insiders[y+3];
+                              unsigned short temp4 = insiders[y+4];
+                              hexer << std::hex << reinterpret_cast<unsigned short*>(temp1) << temp2 << temp3 << temp4;
                               builder = "call " + hexer.str();
                               hexer.str("");
                               hexer.clear();
-                              z += 1;
+                              z += 4;
                               break;
                          }
-
+                         case 0xE9: {
+                              unsigned short temp1 = insiders[y+1];
+                              unsigned short temp2 = insiders[y+2];
+                              unsigned short temp3 = insiders[y+3];
+                              unsigned short temp4 = insiders[y+4];
+                              hexer << std::hex << reinterpret_cast<unsigned short*>(temp1) << temp2 << temp3 << temp4;
+                              builder = "jmp " + hexer.str();
+                              hexer.str("");
+                              hexer.clear();
+                              z += 4;
+                              break;
+                         }
                          default: {
                               z++;
                               break;
                          }
                     }
                     size_t extra_zeros = z;
-                    while (insiders[y + 1 + extra_zeros] == 0x0 && insiders[y + 2 + extra_zeros] == 0x0 && (y + 1 + extra_zeros < insiders.size())) {
+                    while (insiders[y + 1 + extra_zeros] == 0x0 && insiders[y + 2 + extra_zeros] == 0x0 && (y + 2 + extra_zeros < insiders.size())) {
                         extra_zeros += 2;
                     }
                     y += z;
