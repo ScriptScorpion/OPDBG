@@ -1180,44 +1180,48 @@ void Parse(std::vector <std::string> &output, const std::string &Format, std::if
                                    
                               }
                               else if (insiders[y+1] == 0x84) { // je
-                                   unsigned short temp1 = insiders[y+1];
-                                   unsigned short temp2 = insiders[y+2];
-                                   unsigned short temp3 = insiders[y+3];
-                                   unsigned short temp4 = insiders[y+4];
+                                   unsigned short temp1 = insiders[y+2];
+                                   unsigned short temp2 = insiders[y+3];
+                                   unsigned short temp3 = insiders[y+4];
+                                   unsigned short temp4 = insiders[y+5];
                                    hexer << std::hex << reinterpret_cast<unsigned short*>(temp4) << temp3 << temp2 << temp1; // to little endian
                                    builder = "je " + hexer.str();
                                    hexer.str("");
                                    hexer.clear();
+                                   z += 4;
                               }
                               else if (insiders[y+1] == 0x85) { // jne
-                                   unsigned short temp1 = insiders[y+1];
-                                   unsigned short temp2 = insiders[y+2];
-                                   unsigned short temp3 = insiders[y+3];
-                                   unsigned short temp4 = insiders[y+4];
+                                   unsigned short temp1 = insiders[y+2];
+                                   unsigned short temp2 = insiders[y+3];
+                                   unsigned short temp3 = insiders[y+4];
+                                   unsigned short temp4 = insiders[y+5];
                                    hexer << std::hex << reinterpret_cast<unsigned short*>(temp4) << temp3 << temp2 << temp1; // to little endian
                                    builder = "jne " + hexer.str();
                                    hexer.str("");
                                    hexer.clear();
+                                   z += 4;
                               }
                               else if (insiders[y+1] == 0x8C) { // jl
-                                   unsigned short temp1 = insiders[y+1];
-                                   unsigned short temp2 = insiders[y+2];
-                                   unsigned short temp3 = insiders[y+3];
-                                   unsigned short temp4 = insiders[y+4];
+                                   unsigned short temp1 = insiders[y+2];
+                                   unsigned short temp2 = insiders[y+3];
+                                   unsigned short temp3 = insiders[y+4];
+                                   unsigned short temp4 = insiders[y+5];
                                    hexer << std::hex << reinterpret_cast<unsigned short*>(temp4) << temp3 << temp2 << temp1; // to little endian
                                    builder = "jl " + hexer.str();
                                    hexer.str("");
                                    hexer.clear();
+                                   z += 4;
                               }
                               else if (insiders[y+1] == 0x8F) { // jg
-                                   unsigned short temp1 = insiders[y+1];
-                                   unsigned short temp2 = insiders[y+2];
-                                   unsigned short temp3 = insiders[y+3];
-                                   unsigned short temp4 = insiders[y+4];
+                                   unsigned short temp1 = insiders[y+2];
+                                   unsigned short temp2 = insiders[y+3];
+                                   unsigned short temp3 = insiders[y+4];
+                                   unsigned short temp4 = insiders[y+5];
                                    hexer << std::hex << reinterpret_cast<unsigned short*>(temp4) << temp3 << temp2 << temp1; // to little endian
                                    builder = "jg " + hexer.str();
                                    hexer.str("");
                                    hexer.clear();
+                                   z += 4;
                               }
                               z += 2;
                               break;
