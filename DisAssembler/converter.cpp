@@ -8,6 +8,8 @@
 #include <fstream>
 #include "hash_function.h"
 
+// NOTE: right now detection for x64 instructions is not as intended by a developers.
+
 #define EMPTY ""
 
 // Difference between x32 and x64 assembly
@@ -17,17 +19,6 @@
 struct Commands {
      const uint16_t opcode;
      const char *called;
-     uint8_t Size() {
-         switch (opcode) {
-             case 0x0F: return 96;
-             case 0x88: return 8;
-             case 0x89: return 48;
-             case 0x8B: return 48;
-             case 0x8D: return 48;
-             case 0xE8: return 48;
-             case 0xE9: return 48;
-         }
-     }
 };
 
 struct Convert {
@@ -912,7 +903,9 @@ void Parse(std::vector <std::string> &output, const std::string &Format, std::if
           {0x5C, "pop rsp"},
           {0x5D, "pop rbp"},
           
-          {0x0F, EMPTY}, // mov
+          {0x0F, EMPTY}, // wildcard
+          {0x84, EMPTY}, // test
+          {0x85, EMPTY}, // test
           {0x88, EMPTY}, // mov 
           {0x89, EMPTY}, // mov
           {0x8B, EMPTY}, // mov 
@@ -999,7 +992,7 @@ void Parse(std::vector <std::string> &output, const std::string &Format, std::if
           }
           File.seekg(text_size);
           File.read(reinterpret_cast<char*>(&text_size), 4);
-          for (size_t i = 0; i < text_size; ++i) {
+          for (size_t i = 0; i < text_size; ++i) { // increase text_size value if you want to see more disassembly
                File.seekg(entry + i);
                File.read(reinterpret_cast<char*>(&byte), 1);
                insiders.push_back(byte);
@@ -1046,7 +1039,7 @@ void Parse(std::vector <std::string> &output, const std::string &Format, std::if
           File.read(reinterpret_cast<char*>(&text_size), 4); 
           File.seekg(arch_spec_text_section + 20);
           File.read(reinterpret_cast<char*>(&entry), 4);
-          for (size_t i = 0; i < text_size; ++i) {
+          for (size_t i = 0; i < text_size; ++i) { // increase text_size value if you want to see more disassembly
                File.seekg(entry + i);
                File.read(reinterpret_cast<char*>(&byte), 1);
                insiders.push_back(byte);
@@ -1084,7 +1077,7 @@ void Parse(std::vector <std::string> &output, const std::string &Format, std::if
                     size_t z = 0;
                     switch(commands[x].opcode) {
                          case 0x0F: {
-                              if (insiders[y+1] == 0x22) {
+                              if (insiders[y+1] == 0x22) { // mov
                                    builder = "mov ";    
                                    unsigned short temp = insiders[y + 2];
                                    [[maybe_unused]]unsigned short mod = (temp >> 6) & 0b11; // get 2 bit value 
@@ -1186,10 +1179,280 @@ void Parse(std::vector <std::string> &output, const std::string &Format, std::if
                                    }
                                    
                               }
+                              else if (insiders[y+1] == 0x84) { // je
+                                   unsigned short temp1 = insiders[y+1];
+                                   unsigned short temp2 = insiders[y+2];
+                                   unsigned short temp3 = insiders[y+3];
+                                   unsigned short temp4 = insiders[y+4];
+                                   hexer << std::hex << reinterpret_cast<unsigned short*>(temp4) << temp3 << temp2 << temp1; // to little endian
+                                   builder = "je " + hexer.str();
+                                   hexer.str("");
+                                   hexer.clear();
+                              }
+                              else if (insiders[y+1] == 0x85) { // jne
+                                   unsigned short temp1 = insiders[y+1];
+                                   unsigned short temp2 = insiders[y+2];
+                                   unsigned short temp3 = insiders[y+3];
+                                   unsigned short temp4 = insiders[y+4];
+                                   hexer << std::hex << reinterpret_cast<unsigned short*>(temp4) << temp3 << temp2 << temp1; // to little endian
+                                   builder = "jne " + hexer.str();
+                                   hexer.str("");
+                                   hexer.clear();
+                              }
+                              else if (insiders[y+1] == 0x8C) { // jl
+                                   unsigned short temp1 = insiders[y+1];
+                                   unsigned short temp2 = insiders[y+2];
+                                   unsigned short temp3 = insiders[y+3];
+                                   unsigned short temp4 = insiders[y+4];
+                                   hexer << std::hex << reinterpret_cast<unsigned short*>(temp4) << temp3 << temp2 << temp1; // to little endian
+                                   builder = "jl " + hexer.str();
+                                   hexer.str("");
+                                   hexer.clear();
+                              }
+                              else if (insiders[y+1] == 0x8F) { // jg
+                                   unsigned short temp1 = insiders[y+1];
+                                   unsigned short temp2 = insiders[y+2];
+                                   unsigned short temp3 = insiders[y+3];
+                                   unsigned short temp4 = insiders[y+4];
+                                   hexer << std::hex << reinterpret_cast<unsigned short*>(temp4) << temp3 << temp2 << temp1; // to little endian
+                                   builder = "jg " + hexer.str();
+                                   hexer.str("");
+                                   hexer.clear();
+                              }
                               z += 2;
                               break;
-                        }
-                        case 0x88: {
+                         }
+                         case 0x84: {
+                              unsigned short temp = insiders[y+1];
+                              [[maybe_unused]]unsigned short mod = (temp >> 6) & 0b11;
+                              unsigned short rg1 = (temp >> 0) & 0b111;
+                              unsigned short rg2 = (temp >> 3) & 0b111;
+                              builder = "test ";
+                              switch (rg1) {
+                                   case 0: {
+                                        builder += "al, ";
+                                        break;
+                                   }
+                                   case 1: {
+                                        builder += "cl, ";
+                                        break;
+                                   }
+                                   case 2: {
+                                        builder += "dl, ";
+                                        break;
+                                   }
+                                   case 3: {
+                                        builder += "bl, ";
+                                        break;
+                                   }
+                                   default: {
+                                        std::cerr << "Unknown register of command" << std::endl;
+                                        output.clear();
+                                        return;
+                                   }
+                              }
+                              switch (rg2) {
+                                   case 0: {
+                                        builder += "al, ";
+                                        break;
+                                   }
+                                   case 1: {
+                                        builder += "cl, ";
+                                        break;
+                                   }
+                                   case 2: {
+                                        builder += "dl, ";
+                                        break;
+                                   }
+                                   case 3: {
+                                        builder += "bl, ";
+                                        break;
+                                   }
+                                   default: {
+                                        hexer << std::hex << reinterpret_cast<unsigned short*>(rg2);
+                                        builder += hexer.str();
+                                        hexer.str("");
+                                        hexer.clear();
+                                        break;
+                                   }
+                              }
+                              z += 1;
+                              break;
+                         }
+                         case 0x85: {
+                              unsigned short temp = insiders[y+1];
+                              [[maybe_unused]]unsigned short mod = (temp >> 6) & 0b11;
+                              unsigned short rg1 = (temp >> 0) & 0b111;
+                              unsigned short rg2 = (temp >> 3) & 0b111;
+                              builder = "test ";
+                              if (ARCH_X64) { 
+                                   switch (rg1) {
+                                        case 0: {
+                                             builder += "rax, ";
+                                             break;
+                                        }
+                                        case 1: {
+                                             builder += "rcx, ";
+                                             break;
+                                        }
+                                        case 2: {
+                                             builder += "rdx, ";
+                                             break;
+                                        }
+                                        case 3: {
+                                             builder += "rbx, ";
+                                             break;
+                                        }
+                                        case 4: {
+                                             builder += "rsp, ";
+                                             break;
+                                        }
+                                        case 5: {
+                                             builder += "rbp, ";
+                                             break;
+                                        }
+                                        case 6: {
+                                             builder += "rsi, ";
+                                             break;
+                                        }
+                                        case 7: {
+                                             builder += "rdi, ";
+                                             break;
+                                        }
+                                        default: {
+                                             std::cerr << "Unknown register of command" << std::endl;
+                                             output.clear();
+                                             return;
+                                        }
+                                   }
+                                   switch (rg2) {
+                                        case 0: {
+                                             builder += "rax";
+                                             break;
+                                        }
+                                        case 1: {
+                                             builder += "rcx";
+                                             break;
+                                        }
+                                        case 2: {
+                                             builder += "rdx";
+                                             break;
+                                        }
+                                        case 3: {
+                                             builder += "rbx";
+                                             break;
+                                        }
+                                        case 4: {
+                                             builder += "rsp";
+                                             break;
+                                        }
+                                        case 5: {
+                                             builder += "rbp";
+                                             break;
+                                        }
+                                        case 6: {
+                                             builder += "rsi";
+                                             break;
+                                        }
+                                        case 7: {
+                                             builder += "rdi";
+                                             break;
+                                        }
+                                        default: {
+                                             hexer << std::hex << reinterpret_cast<unsigned short*>(rg2);
+                                             builder += hexer.str();
+                                             hexer.str("");
+                                             hexer.clear();
+                                             break;
+                                        }
+                                   }
+                              }
+                              else {
+                                   switch (rg1) {
+                                        case 0: {
+                                             builder += "eax, ";
+                                             break;
+                                        }
+                                        case 1: {
+                                             builder += "ecx, ";
+                                             break;
+                                        }
+                                        case 2: {
+                                             builder += "edx, ";
+                                             break;
+                                        }
+                                        case 3: {
+                                             builder += "ebx, ";
+                                             break;
+                                        }
+                                        case 4: {
+                                             builder += "esp, ";
+                                             break;
+                                        }
+                                        case 5: {
+                                             builder += "ebp, ";
+                                             break;
+                                        }
+                                        case 6: {
+                                             builder += "esi, ";
+                                             break;
+                                        }
+                                        case 7: {
+                                             builder += "edi, ";
+                                             break;
+                                        }
+                                        default: {
+                                             std::cerr << "Unknown register of command" << std::endl;
+                                             output.clear();
+                                             return;
+                                        }
+                                   }
+                                   switch (rg2) {
+                                        case 0: {
+                                             builder += "eax";
+                                             break;
+                                        }
+                                        case 1: {
+                                             builder += "ecx";
+                                             break;
+                                        }
+                                        case 2: {
+                                             builder += "edx";
+                                             break;
+                                        }
+                                        case 3: {
+                                             builder += "ebx";
+                                             break;
+                                        }
+                                        case 4: {
+                                             builder += "esp";
+                                             break;
+                                        }
+                                        case 5: {
+                                             builder += "ebp";
+                                             break;
+                                        }
+                                        case 6: {
+                                             builder += "esi";
+                                             break;
+                                        }
+                                        case 7: {
+                                             builder += "edi";
+                                             break;
+                                        }
+                                        default: {
+                                             hexer << std::hex << reinterpret_cast<unsigned short*>(rg2);
+                                             builder += hexer.str();
+                                             hexer.str("");
+                                             hexer.clear();
+                                             break;
+                                        }
+                                   }
+                              }
+                              z += 1;
+                              break;
+                         }
+                         case 0x88: {
                               unsigned short temp = insiders[y+1];
                               [[maybe_unused]]unsigned short mod = (temp >> 6) & 0b11;
                               unsigned short rg1 = (temp >> 0) & 0b111;
@@ -1992,7 +2255,7 @@ void Parse(std::vector <std::string> &output, const std::string &Format, std::if
                               unsigned short temp2 = insiders[y+2];
                               unsigned short temp3 = insiders[y+3];
                               unsigned short temp4 = insiders[y+4];
-                              hexer << std::hex << reinterpret_cast<unsigned short*>(temp1) << temp2 << temp3 << temp4;
+                              hexer << std::hex << reinterpret_cast<unsigned short*>(temp4) << temp3 << temp2 << temp1; // to little endian
                               builder = "jmp " + hexer.str();
                               hexer.str("");
                               hexer.clear();
