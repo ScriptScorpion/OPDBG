@@ -2251,7 +2251,7 @@ void Parse(std::vector <std::string> &output, const std::string &Format, std::if
                               builder = "call " + hexer.str();
                               hexer.str("");
                               hexer.clear();
-                              z += 4;
+                              z += 5;
                               break;
                          }
                          case 0xE9: {
@@ -2263,7 +2263,7 @@ void Parse(std::vector <std::string> &output, const std::string &Format, std::if
                               builder = "jmp " + hexer.str();
                               hexer.str("");
                               hexer.clear();
-                              z += 4;
+                              z += 5;
                               break;
                          }
                          default: {
